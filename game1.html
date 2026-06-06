@@ -88,10 +88,12 @@
 
     <!-- 遊戲進行中畫面 -->
     <div v-else>
-      <div class="status-text">第 {{ currentQuestionIndex + 1 }} / 5 題</div>
-      <div class="status-text">目前分數：{{ score }}</div>
+      <div class="status-text">第 {{ currentQuestionIndex + 1 }} / 5 題 | 目前分數：{{ score }}</div>
       
-      <div class="emoji-display">
+      <div v-if="isCorrect" class="image-reveal" style="margin: 20px 0;">
+        <img :src="currentQuestion.imageUrl" alt="英雄圖片" style="width: 100%; max-width: 300px; border-radius: 8px; border: 2px solid #c8aa6e;" />
+      </div>
+      <div v-else class="emoji-display">
         {{ currentQuestion.emoji }}
       </div>
       
@@ -104,6 +106,10 @@
         >
           {{ option }}
         </button>
+      </div>
+
+      <div class="answer-feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444', height: '24px', marginTop: '15px', fontWeight: 'bold' }">
+        {{ feedbackMessage }}
       </div>
     </div>
   </div>
