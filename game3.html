@@ -45,7 +45,11 @@
       border-radius: 4px;
     }
     .emoji-text { font-size: 64px; letter-spacing: 8px; text-shadow: 0 0 15px rgba(0,229,255,0.5); }
-    .reveal-img { width: 100%; height: 100%; object-fit: cover; animation: glitchReveal 0.4s ease; }
+    .reveal-img {
+      width: 100%;
+      height: auto;
+      animation: fadeIn 0.5s ease;
+    }
     .hero-name-overlay {
       position: absolute; bottom: 0; width: 100%; background: rgba(18, 18, 18, 0.85);
       color: var(--ww-cyan); padding: 10px 0; font-weight: bold; font-size: 18px; border-top: 1px solid var(--ww-border);
@@ -88,7 +92,7 @@
         <span style="color: var(--ww-gold);">Score: {{ score }}</span>
       </div>
       
-      <div class="display-area">
+      <div class="display-area" :style="{ justifyContent: isAnswering ? 'flex-start' : 'center' }">
         <template v-if="isAnswering">
           <img v-if="currentQuestion.imageUrl" :src="currentQuestion.imageUrl" class="reveal-img">
           <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
