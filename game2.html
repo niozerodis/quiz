@@ -14,12 +14,19 @@
     .game-container {
       background-color: #1e2328; border: 2px solid var(--hex-gold); padding: 30px;
       border-radius: 4px; width: 100%; max-width: 500px; text-align: center;
+      /* 確保內容物平滑調整 */
+      transition: all 0.6s ease;
     }
     .pic-box {
-      width: 300px; height: 300px; margin: 20px auto;
+      width: 300px;
+      /* ⚡ 移除了 fixed height，改用 dynamic aspect-ratio ⚡ */
+      margin: 20px auto;
       border: 3px solid var(--hex-border); background-repeat: no-repeat;
-      /* 初始狀態：圓形、無動畫 */
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      background-color: #1a2026; /* 如果圖片載入慢，先顯示深灰 */
+      /* ⚡ 預設屬性 ⚡ */
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
     }
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     button {
@@ -33,7 +40,7 @@
 </head>
 <body>
 <div id="app">
-  <div class="game-container">
+  <div class="game-container" :style="{ maxWidth: isAnswering ? '600px' : '500px' }">
     <div v-if="loading">傳送中...</div>
     <div v-else-if="isGameOver">
       <h2>戰績結算</h2>
@@ -45,9 +52,16 @@
       
       <div class="pic-box" :style="{
           backgroundImage: `url(${currentQuestion.imageUrl})`,
+          // Guess: dynamic, Answer: center top
           backgroundPosition: isAnswering ? 'center top' : currentQuestion.focusPosition,
-          backgroundSize: isAnswering ? 'contain' : '400%',
+          // Guess: 400%, Answer: cover (填滿長方形)
+          backgroundSize: isAnswering ? 'cover' : '400%',
+          // Shape: round to square
           borderRadius: isAnswering ? '8px' : '50%',
+          // ⚡⚡ Aspect Ratio Transition ⚡⚡
+          // Guess: square (1:1), Answer: landscape (16:9)
+          aspectRatio: isAnswering ? '16 / 9' : '1 / 1',
+          // Correct transition logic (only when answering)
           transition: isAnswering ? 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)' : 'none'
         }">
       </div>
@@ -62,6 +76,7 @@
 <script>
   const { createApp, ref, computed, onMounted } = Vue;
   const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
+
   createApp({
     setup() {
       const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
@@ -70,11 +85,24 @@
       const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
 
       const fetchQuestions = async () => {
-        loading.value = true;
-        const res = await fetch(`${GAS_API_URL}?game=ImageGame&t=${Date.now()}`);
-        const json = await res.json();
-        questions.value = json.data;
-        loading.value = false;
+        try {
+          loading.value = true;
+          // 注意：game1.html 用 game1，game2.html 用 game2
+          const res = await fetch(`${GAS_API_URL}?game=ImageGame&t=${Date.now()}`);
+          const json = await res.json();
+          
+          if (json.status === 'success') {
+            questions.value = json.data;
+          } else {
+            console.error("後端回傳錯誤：", json.message);
+            alert(`API 發生錯誤：${json.message}`);
+          }
+        } catch (err) {
+          console.error("Fetch 失敗：", err);
+          alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
+        } finally {
+          loading.value = false;
+        }
       };
 
       const selectOption = (opt) => {
@@ -88,7 +116,7 @@
           isCorrect.value = null; feedbackMessage.value = '';
           if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
           isAnswering.value = false;
-        }, 3000); // 延長時間讓玩家看清楚方形全圖
+        }, 3000); 
       };
 
       const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
