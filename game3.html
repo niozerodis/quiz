@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鳴潮 Wuthering Waves Emoji Quiz</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    :root {
+      /* 鳴潮主題色：青藍色、金色、深科技灰 */
+      --ww-cyan: #00e5ff;
+      --ww-cyan-dark: #008899;
+      --ww-gold: #d4af37;
+      --ww-bg-dark: #121212;
+      --ww-panel: #1e1e24;
+      --ww-border: rgba(0, 229, 255, 0.3);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--ww-bg-dark);
+      background-image: 
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px; /* 科技網格背景 */
+      color: #e0e0e0;
+      display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+    }
+    .game-container {
+      background-color: var(--ww-panel); 
+      border: 1px solid var(--ww-cyan-dark); 
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.1), inset 0 0 10px rgba(0, 229, 255, 0.05);
+      padding: 30px; border-radius: 8px; width: 100%; max-width: 450px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    /* 頂部裝飾條 */
+    .game-container::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--ww-cyan), transparent);
+    }
+    .title-text { color: var(--ww-cyan); letter-spacing: 2px; text-transform: uppercase; font-size: 20px; }
+    
+    .display-area {
+      height: 280px; display: flex; align-items: center; justify-content: center;
+      margin: 20px 0; border: 1px solid var(--ww-border); background: #16161a; position: relative; overflow: hidden;
+      border-radius: 4px;
+    }
+    .emoji-text { font-size: 64px; letter-spacing: 8px; text-shadow: 0 0 15px rgba(0,229,255,0.5); }
+    .reveal-img { width: 100%; height: 100%; object-fit: cover; animation: glitchReveal 0.4s ease; }
+    .hero-name-overlay {
+      position: absolute; bottom: 0; width: 100%; background: rgba(18, 18, 18, 0.85);
+      color: var(--ww-cyan); padding: 10px 0; font-weight: bold; font-size: 18px; border-top: 1px solid var(--ww-border);
+    }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button {
+      background: rgba(0, 229, 255, 0.05); color: #e0e0e0; border: 1px solid var(--ww-border);
+      padding: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; border-radius: 4px;
+    }
+    button:hover:not(:disabled) { 
+      background: var(--ww-cyan-dark); color: #fff; box-shadow: 0 0 10px rgba(0,229,255,0.4); 
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .feedback { height: 30px; margin-top: 15px; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+    
+    @keyframes glitchReveal { 
+      0% { filter: contrast(200%) brightness(150%) hue-rotate(90deg); opacity: 0; transform: scale(1.05); } 
+      100% { filter: contrast(100%) brightness(100%) hue-rotate(0deg); opacity: 1; transform: scale(1); } 
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="game-container">
+    <div class="title-text" style="margin-bottom: 15px;">Wuthering Waves Terminal</div>
+
+    <div v-if="loading" style="color: var(--ww-cyan); margin: 40px 0;">連線至索拉里斯資料庫...</div>
+    
+    <div v-else-if="isGameOver">
+      <h2 style="color: #fff;">分析完成</h2>
+      <div style="font-size: 36px; color: var(--ww-cyan); margin: 20px 0; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
+        {{ score }} / 100
+      </div>
+      <button @click="startGame" style="width:100%">重新執行分析</button>
+    </div>
+    
+    <div v-else>
+      <div style="color: #888; font-size: 14px; display: flex; justify-content: space-between; padding: 0 5px;">
+        <span>檔案 {{ currentQuestionIndex + 1 }} / 10</span>
+        <span style="color: var(--ww-gold);">Score: {{ score }}</span>
+      </div>
+      
+      <div class="display-area">
+        <template v-if="isAnswering">
+          <img v-if="currentQuestion.imageUrl" :src="currentQuestion.imageUrl" class="reveal-img">
+          <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
+        </template>
+        <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
+      </div>
+      
+      <div class="options-grid">
+        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+      </div>
+      
+      <div class="feedback" :style="{ color: isCorrect ? 'var(--ww-cyan)' : '#ff4444' }">
+        {{ feedbackMessage }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, computed, onMounted } = Vue;
+  
+  // ⚡ 貼上你發布的最新版 GAS 網址
+  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
+
+  createApp({
+    setup() {
+      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+      const isCorrect = ref(null), feedbackMessage = ref('');
+      const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
+
+      const fetchQuestions = async () => {
+        try {
+          loading.value = true;
+          // 呼叫 game3 參數
+          const res = await fetch(`${GAS_API_URL}?game=WWQuestion&t=${Date.now()}`);
+          const json = await res.json();
+          
+          if (json.status === 'success') {
+            questions.value = json.data;
+          } else {
+            console.error("後端回傳錯誤：", json.message);
+            alert(`API 發生錯誤：${json.message}`);
+          }
+        } catch (err) {
+          console.error("Fetch 失敗：", err);
+          alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const selectOption = (opt) => {
+        isAnswering.value = true;
+        if (opt === currentQuestion.value.answer) {
+          score.value += 10; isCorrect.value = true; feedbackMessage.value = '共鳴確認！';
+        } else {
+          isCorrect.value = false; feedbackMessage.value = `錯誤！目標為 ${currentQuestion.value.answer}`;
+        }
+        setTimeout(() => {
+          isCorrect.value = null; feedbackMessage.value = '';
+          // 👈 這裡改成小於 9，因為總共有 10 題 (index 0~9)
+          if (currentQuestionIndex.value < 9) {
+            currentQuestionIndex.value++;
+          } else {
+            isGameOver.value = true;
+          }
+          isAnswering.value = false;
+        }, 2500);
+      };
+
+      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+      onMounted(startGame);
+      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
