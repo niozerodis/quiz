@@ -38,7 +38,7 @@
       /* 設定背景圖放大 4 倍，藉此達到局部效果 */
       background-size: 400%; 
       background-repeat: no-repeat;
-      transition: background-position 0.5s ease;
+      transition: all 0.5s ease;
     }
     .options-grid {
       display: grid;
@@ -104,7 +104,8 @@
         class="partial-image-box" 
         :style="{ 
           backgroundImage: `url(${currentQuestion.imageUrl})`,
-          backgroundPosition: currentQuestion.focusPosition 
+          backgroundPosition: isCorrect ? 'center top' : currentQuestion.focusPosition,
+          backgroundSize: isCorrect ? 'cover' : '400%'
         }"
       ></div>
       
@@ -201,7 +202,7 @@
             isGameOver.value = true;
           }
           isAnswering.value = false;
-        }, 1200); // 延長一點時間讓玩家看清楚正確答案
+        }, 2000); // 延長一點時間讓玩家看清楚正確答案
       };
 
       onMounted(() => {
