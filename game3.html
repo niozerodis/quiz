@@ -42,7 +42,7 @@
     .display-area {
       height: 280px; 
       display: flex; 
-      align-items: center; 
+      justify-content: center; 
       margin: 20px 0; 
       border: 1px solid var(--ww-border); 
       background: #16161a; 
@@ -98,7 +98,7 @@
         <span style="color: var(--ww-gold);">Score: {{ score }}</span>
       </div>
       
-      <div class="display-area" :style="{ justifyContent: isAnswering ? 'flex-start' : 'center' }">
+      <div class="display-area" :style="{ alignItems: isAnswering ? 'flex-start' : 'center' }">
         <template v-if="isAnswering">
           <img v-if="currentQuestion.imageUrl" :src="currentQuestion.imageUrl" class="reveal-img">
           <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
@@ -167,7 +167,7 @@
             isGameOver.value = true;
           }
           isAnswering.value = false;
-        }, 5000000000);
+        }, 1500);
       };
 
       const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
