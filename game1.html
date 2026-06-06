@@ -121,6 +121,9 @@
   // 替換為你的 Google Apps Script 部署網址
   const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
 
+  const isCorrect = ref(null);
+  const feedbackMessage = ref('');
+
   createApp({
     setup() {
       const questions = ref([]);
@@ -171,19 +174,26 @@
         const correctAnswer = currentQuestion.value.answer;
         
         if (selected === correctAnswer) {
-          // 答對加 10 分
           score.value += 10;
+          isCorrect.value = true;
+          feedbackMessage.value = '答對了！';
+        } else {
+          isCorrect.value = false;
+          feedbackMessage.value = `答錯了！正確答案是：${correctAnswer}`;
         }
 
-        // 短暫延遲讓玩家看到結果再進入下一題
+        // 把等待時間從 500 延長到 2000 毫秒 (2秒)，讓玩家可以看圖片
         setTimeout(() => {
+          isCorrect.value = null;
+          feedbackMessage.value = '';
+          
           if (currentQuestionIndex.value < 4) {
             currentQuestionIndex.value++;
           } else {
             isGameOver.value = true;
           }
           isAnswering.value = false;
-        }, 500);
+        }, 2000); 
       };
 
       onMounted(() => {
@@ -199,7 +209,9 @@
         resultMessage,
         isAnswering,
         startGame,
-        selectOption
+        selectOption,
+        isCorrect, 
+        feedbackMessage
       };
     }
   }).mount('#app');
