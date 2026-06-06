@@ -3,227 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LoL 英雄局部猜謎</title>
+  <title>LOL Pic Quiz - Hextech</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
+    :root { --hex-gold: #c8aa6e; --hex-border: #785a28; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #0a1428; /* LoL 客戶端深藍底色 */
-      color: #f0e6d2;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle, #0a1428 0%, #050a14 100%);
+      color: #f0e6d2; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
     }
     .game-container {
-      background-color: #1e2328;
-      border: 2px solid #c8aa6e;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-      width: 100%;
-      max-width: 450px;
-      text-align: center;
+      background-color: #1e2328; border: 2px solid var(--hex-gold); padding: 30px;
+      border-radius: 4px; width: 100%; max-width: 500px; text-align: center;
     }
-    /* 核心魔法：局部圖片顯示區塊 */
-    .partial-image-box {
-      width: 250px;
-      height: 250px;
-      margin: 20px auto;
-      border: 3px solid #785a28;
-      border-radius: 50%; /* 圓形遮罩，更有遊戲頭像感 */
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-      
-      /* 設定背景圖放大 4 倍，藉此達到局部效果 */
-      background-size: 400%; 
-      background-repeat: no-repeat;
+    .pic-box {
+      width: 300px; height: 300px; margin: 20px auto;
+      border: 3px solid var(--hex-border); background-repeat: no-repeat;
+      /* 初始狀態：圓形、無動畫 */
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 25px;
-    }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     button {
-      background-color: #1e282d;
-      color: #c8aa6e;
-      border: 1px solid #c8aa6e;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #1e282d; color: var(--hex-gold); border: 1px solid var(--hex-border);
+      padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;
     }
-    button:hover:not(:disabled) {
-      background-color: #c8aa6e;
-      color: #111;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .score-display {
-      font-size: 28px;
-      color: #c8aa6e;
-      margin: 20px 0;
-      font-weight: bold;
-    }
-    .answer-feedback {
-      height: 24px;
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    .correct { color: #00ff00; }
-    .wrong { color: #ff4444; }
+    button:hover:not(:disabled) { background: var(--hex-gold); color: #111; }
+    button:disabled { opacity: 0.5; }
+    .feedback { height: 30px; margin-top: 15px; font-weight: bold; }
   </style>
 </head>
 <body>
-
 <div id="app">
   <div class="game-container">
-    <h2>英雄局部猜謎</h2>
-    
-    <div v-if="loading">
-      <p>正在載入美術圖...</p>
-    </div>
-
+    <div v-if="loading">傳送中...</div>
     <div v-else-if="isGameOver">
-      <h3>挑戰結束！</h3>
-      <div class="score-display">最終分數：{{ score }} / 50</div>
-      <button @click="startGame" style="width: 100%; margin-top: 20px;">重新挑戰</button>
+      <h2>戰績結算</h2>
+      <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
+      <button @click="startGame" style="width:100%">重返戰場</button>
     </div>
-
     <div v-else>
-      <div style="color: #a09b8c;">第 {{ currentQuestionIndex + 1 }} / 5 題 | 分數：{{ score }}</div>
+      <div style="color: #a09b8c;">MISSION {{ currentQuestionIndex + 1 }} / 5</div>
       
-      <!-- 動態綁定背景圖片與位置 -->
-      <div 
-        class="partial-image-box" 
-        :style="{ 
+      <div class="pic-box" :style="{
           backgroundImage: `url(${currentQuestion.imageUrl})`,
-          backgroundPosition: isCorrect ? 'center top' : currentQuestion.focusPosition,
-          backgroundSize: isCorrect ? 'cover' : '400%',
-          transition: isCorrect ? 'all 0.5s ease' : 'none'
-        }"
-      ></div>
-      
-      <div class="options-grid">
-        <button 
-          v-for="(option, index) in currentQuestion.options" 
-          :key="index"
-          @click="selectOption(option)"
-          :disabled="isAnswering"
-        >
-          {{ option }}
-        </button>
+          backgroundPosition: isAnswering ? 'center top' : currentQuestion.focusPosition,
+          backgroundSize: isAnswering ? 'contain' : '400%',
+          borderRadius: isAnswering ? '8px' : '50%',
+          transition: isAnswering ? 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)' : 'none'
+        }">
       </div>
 
-      <!-- 答題回饋 -->
-      <div class="answer-feedback" :class="{ correct: isCorrect, wrong: isCorrect === false }">
-        {{ feedbackMessage }}
+      <div class="options-grid">
+        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
       </div>
+      <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
     </div>
   </div>
 </div>
-
 <script>
   const { createApp, ref, computed, onMounted } = Vue;
-
-  // ★★★ 替換為你的第二支 GAS 部署網址 ★★★
   const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
-
   createApp({
     setup() {
-      const questions = ref([]);
-      const currentQuestionIndex = ref(0);
-      const score = ref(0);
-      const loading = ref(true);
-      const isGameOver = ref(false);
-      const isAnswering = ref(false);
-      
-      const isCorrect = ref(null);
-      const feedbackMessage = ref('');
-
+      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+      const isCorrect = ref(null), feedbackMessage = ref('');
       const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
 
       const fetchQuestions = async () => {
-        try {
-          loading.value = true;
-          const response = await fetch(`${GAS_API_URL}?game=ImageGame&t=${new Date().getTime()}`);
-          const result = await response.json();
-          
-          if (result.status === 'success') {
-            questions.value = result.data;
-            // 預載圖片，避免切題時閃爍
-            questions.value.forEach(q => {
-              const img = new Image();
-              img.src = q.imageUrl;
-            });
-          }
-        } catch (error) {
-          console.error('API 請求錯誤:', error);
-          alert('讀取失敗，請確認 GAS 網址。');
-        } finally {
-          loading.value = false;
-        }
+        loading.value = true;
+        const res = await fetch(`${GAS_API_URL}?game=game2&t=${Date.now()}`);
+        const json = await res.json();
+        questions.value = json.data;
+        loading.value = false;
       };
 
-      const startGame = async () => {
-        isGameOver.value = false;
-        score.value = 0;
-        currentQuestionIndex.value = 0;
-        isCorrect.value = null;
-        feedbackMessage.value = '';
-        await fetchQuestions();
-      };
-
-      const selectOption = (selected) => {
+      const selectOption = (opt) => {
         isAnswering.value = true;
-        const correctAnswer = currentQuestion.value.answer;
-        
-        if (selected === correctAnswer) {
-          score.value += 10;
-          isCorrect.value = true;
-          feedbackMessage.value = '答對了！';
+        if (opt === currentQuestion.value.answer) {
+          score.value += 10; isCorrect.value = true; feedbackMessage.value = '洞察秋毫！';
         } else {
-          isCorrect.value = false;
-          feedbackMessage.value = `答錯了！正確答案是：${correctAnswer}`;
+          isCorrect.value = false; feedbackMessage.value = `失策！正確是 ${currentQuestion.value.answer}`;
         }
-
         setTimeout(() => {
-          isCorrect.value = null;
-          feedbackMessage.value = '';
-          
-          if (currentQuestionIndex.value < 4) {
-            currentQuestionIndex.value++;
-          } else {
-            isGameOver.value = true;
-          }
+          isCorrect.value = null; feedbackMessage.value = '';
+          if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
           isAnswering.value = false;
-        }, 2000); // 延長一點時間讓玩家看清楚正確答案
+        }, 3000); // 延長時間讓玩家看清楚方形全圖
       };
 
-      onMounted(() => {
-        startGame();
-      });
-
-      return {
-        loading,
-        isGameOver,
-        score,
-        currentQuestionIndex,
-        currentQuestion,
-        isAnswering,
-        isCorrect,
-        feedbackMessage,
-        startGame,
-        selectOption
-      };
+      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+      onMounted(startGame);
+      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
     }
   }).mount('#app');
 </script>
-
 </body>
 </html>
