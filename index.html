@@ -136,7 +136,7 @@
         try {
           loading.value = true;
           // 加上時間戳防止快取
-          const response = await fetch(`${GAS_API_URL}?t=${new Date().getTime()}`);
+          const response = await fetch(`${GAS_API_URL}?game=image&t=${new Date().getTime()}`);
           const result = await response.json();
           
           if (result.status === 'success') {
