@@ -79,7 +79,7 @@
       const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
       const fetchQuestions = async () => {
         loading.value = true;
-        const res = await fetch(`${GAS_API_URL}?game=game1&t=${Date.now()}`);
+        const res = await fetch(`${GAS_API_URL}?game=EmojiGame&t=${Date.now()}`);
         const json = await res.json();
         questions.value = json.data;
         loading.value = false;
