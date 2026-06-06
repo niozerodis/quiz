@@ -3,219 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LoL Emoji 猜謎遊戲</title>
+  <title>LOL Emoji Quiz - Hextech</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
+    :root {
+      --hex-gold: #c8aa6e;
+      --hex-blue: #0ac8b9;
+      --hex-dark: #091428;
+      --hex-border: #785a28;
+    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #1a1c23;
-      color: #f0f6fc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      background: radial-gradient(circle, #0a1428 0%, #050a14 100%);
+      color: #f0e6d2;
+      display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
     }
     .game-container {
-      background-color: #2d333b;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
+      background-color: #1e2328; border: 2px solid var(--hex-gold); padding: 30px;
+      border-radius: 4px; box-shadow: 0 0 30px rgba(0,0,0,0.8); width: 100%; max-width: 450px; text-align: center;
     }
-    .emoji-display {
-      font-size: 48px;
-      margin: 20px 0;
-      letter-spacing: 10px;
+    .display-area {
+      height: 280px; display: flex; align-items: center; justify-content: center;
+      margin: 20px 0; border: 1px solid var(--hex-border); background: #010a13; position: relative; overflow: hidden;
     }
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 20px;
+    .emoji-text { font-size: 64px; letter-spacing: 8px; }
+    .reveal-img { width: 100%; height: 100%; object-fit: cover; animation: fadeIn 0.5s ease; }
+    .hero-name-overlay {
+      position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7);
+      color: var(--hex-gold); padding: 8px 0; font-weight: bold;
     }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     button {
-      background-color: #c8aa6e; /* 英雄聯盟經典金色 */
-      color: #111;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #1e282d; color: var(--hex-gold); border: 1px solid var(--hex-border);
+      padding: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s;
     }
-    button:hover {
-      background-color: #f0e6d2;
-      transform: translateY(-2px);
-    }
-    button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .status-text {
-      color: #8b949e;
-      margin-bottom: 10px;
-    }
-    .score-display {
-      font-size: 24px;
-      color: #58a6ff;
-      margin: 20px 0;
-    }
+    button:hover:not(:disabled) { background: var(--hex-gold); color: #111; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .feedback { height: 30px; margin-top: 15px; font-size: 18px; font-weight: bold; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
 <body>
-
 <div id="app">
   <div class="game-container">
-    <h2>LoL Emoji 猜謎</h2>
-    
-    <!-- 載入中狀態 -->
-    <div v-if="loading">
-      <p>正在召喚峽谷資料...</p>
-    </div>
-
-    <!-- 遊戲結束畫面 -->
+    <div v-if="loading">召喚中...</div>
     <div v-else-if="isGameOver">
-      <h3>遊戲結束！</h3>
-      <div class="score-display">你的分數：{{ score }} / 50</div>
-      <p>{{ resultMessage }}</p>
-      <button @click="startGame" style="width: 100%; margin-top: 15px;">再玩一次</button>
+      <h2>挑戰結束</h2>
+      <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
+      <button @click="startGame" style="width:100%">再次進入峽谷</button>
     </div>
-
-    <!-- 遊戲進行中畫面 -->
     <div v-else>
-      <div class="status-text">第 {{ currentQuestionIndex + 1 }} / 5 題 | 目前分數：{{ score }}</div>
-      
-      <div v-if="isCorrect" class="image-reveal" style="margin: 20px 0;">
-        <img :src="currentQuestion.imageUrl" alt="英雄圖片" style="width: 100%; max-width: 300px; border-radius: 8px; border: 2px solid #c8aa6e;" />
+      <div style="color: #a09b8c;">ROUND {{ currentQuestionIndex + 1 }} / 5</div>
+      <div class="display-area">
+        <template v-if="isAnswering">
+          <img :src="currentQuestion.imageUrl" class="reveal-img">
+          <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
+        </template>
+        <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
       </div>
-      <div v-else class="emoji-display">
-        {{ currentQuestion.emoji }}
-      </div>
-      
       <div class="options-grid">
-        <button 
-          v-for="(option, index) in currentQuestion.options" 
-          :key="index"
-          @click="selectOption(option)"
-          :disabled="isAnswering"
-        >
-          {{ option }}
-        </button>
+        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
       </div>
-
-      <div class="answer-feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444', height: '24px', marginTop: '15px', fontWeight: 'bold' }">
-        {{ feedbackMessage }}
-      </div>
+      <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
     </div>
   </div>
 </div>
-
 <script>
   const { createApp, ref, computed, onMounted } = Vue;
-
-  // 替換為你的 Google Apps Script 部署網址
   const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
-
-  const isCorrect = ref(null);
-  const feedbackMessage = ref('');
-
   createApp({
     setup() {
-      const questions = ref([]);
-      const currentQuestionIndex = ref(0);
-      const score = ref(0);
-      const loading = ref(true);
-      const isGameOver = ref(false);
-      const isAnswering = ref(false);
-
+      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+      const isCorrect = ref(null), feedbackMessage = ref('');
       const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
-
-      const resultMessage = computed(() => {
-        if (score.value === 50) return '太神啦！Faker 是你？';
-        if (score.value >= 30) return '表現不錯，大師階級的觀察力！';
-        return '看來你還需要多打幾場積分喔！';
-      });
-
       const fetchQuestions = async () => {
-        try {
-          loading.value = true;
-          // 加上時間戳防止快取
-          const response = await fetch(`${GAS_API_URL}?game=EmojiGame&t=${new Date().getTime()}`);
-          const result = await response.json();
-          
-          if (result.status === 'success') {
-            questions.value = result.data;
-          } else {
-            console.error('獲取題目失敗:', result.message);
-            alert('讀取題目失敗，請檢查 API。');
-          }
-        } catch (error) {
-          console.error('API 請求錯誤:', error);
-          alert('網路錯誤，請確認 GAS 部署網址是否正確。');
-        } finally {
-          loading.value = false;
-        }
+        loading.value = true;
+        const res = await fetch(`${GAS_API_URL}?game=game1&t=${Date.now()}`);
+        const json = await res.json();
+        questions.value = json.data;
+        loading.value = false;
       };
-
-      const startGame = async () => {
-        isGameOver.value = false;
-        score.value = 0;
-        currentQuestionIndex.value = 0;
-        await fetchQuestions();
-      };
-
-      const selectOption = (selected) => {
+      const selectOption = (opt) => {
         isAnswering.value = true;
-        const correctAnswer = currentQuestion.value.answer;
-        
-        if (selected === correctAnswer) {
-          score.value += 10;
-          isCorrect.value = true;
-          feedbackMessage.value = '答對了！';
+        if (opt === currentQuestion.value.answer) {
+          score.value += 10; isCorrect.value = true; feedbackMessage.value = '精準預測！';
         } else {
-          isCorrect.value = false;
-          feedbackMessage.value = `答錯了！正確答案是：${correctAnswer}`;
+          isCorrect.value = false; feedbackMessage.value = `失誤！這是 ${currentQuestion.value.answer}`;
         }
-
-        // 把等待時間從 500 延長到 2000 毫秒 (2秒)，讓玩家可以看圖片
         setTimeout(() => {
-          isCorrect.value = null;
-          feedbackMessage.value = '';
-          
-          if (currentQuestionIndex.value < 4) {
-            currentQuestionIndex.value++;
-          } else {
-            isGameOver.value = true;
-          }
+          isCorrect.value = null; feedbackMessage.value = '';
+          if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
           isAnswering.value = false;
-        }, 2000); 
+        }, 2500);
       };
-
-      onMounted(() => {
-        startGame();
-      });
-
-      return {
-        loading,
-        isGameOver,
-        score,
-        currentQuestionIndex,
-        currentQuestion,
-        resultMessage,
-        isAnswering,
-        startGame,
-        selectOption,
-        isCorrect, 
-        feedbackMessage
-      };
+      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+      onMounted(startGame);
+      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
     }
   }).mount('#app');
 </script>
-
 </body>
 </html>
