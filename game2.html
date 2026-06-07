@@ -59,92 +59,92 @@
   </style>
 </head>
 <body>
-<a href="./index.html" class="back-to-lobby">⬅ 返回大廳</a>
-<div id="app">
-  <div class="game-container" :style="{ maxWidth: isAnswering ? '600px' : '500px' }">
-    <div v-if="loading">傳送中...</div>
-    <div v-else-if="isGameOver">
-      <h2>戰績結算</h2>
-      <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
-      <button @click="startGame" style="width:100%">重返戰場</button>
-    </div>
-    <div v-else>
-      <div style="color: #a09b8c;">MISSION {{ currentQuestionIndex + 1 }} / 5</div>
-      
-      <div class="pic-box" :style="{
-          backgroundImage: `url(${currentQuestion.imageUrl})`,
-          // Guess: dynamic, Answer: center top
-          backgroundPosition: isAnswering ? 'center top' : currentQuestion.focusPosition,
-          // Guess: 400%, Answer: cover (填滿長方形)
-          backgroundSize: isAnswering ? 'cover' : '400%',
-          // Shape: round to square
-          borderRadius: isAnswering ? '8px' : '50%',
-          // ⚡⚡ Aspect Ratio Transition ⚡⚡
-          // Guess: square (1:1), Answer: landscape (16:9)
-          aspectRatio: isAnswering ? '16 / 9' : '1 / 1',
-          // Correct transition logic (only when answering)
-          transition: isAnswering ? 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)' : 'none'
-        }">
+  <a href="./index.html" class="back-to-lobby">⬅ 返回大廳</a>
+  <div id="app">
+    <div class="game-container" :style="{ maxWidth: isAnswering ? '600px' : '500px' }">
+      <div v-if="loading">傳送中...</div>
+      <div v-else-if="isGameOver">
+        <h2>戰績結算</h2>
+        <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
+        <button @click="startGame" style="width:100%">重返戰場</button>
       </div>
-
-      <div class="options-grid">
-        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+      <div v-else>
+        <div style="color: #a09b8c;">MISSION {{ currentQuestionIndex + 1 }} / 5</div>
+        
+        <div class="pic-box" :style="{
+            backgroundImage: `url(${currentQuestion.imageUrl})`,
+            // Guess: dynamic, Answer: center top
+            backgroundPosition: isAnswering ? 'center top' : currentQuestion.focusPosition,
+            // Guess: 400%, Answer: cover (填滿長方形)
+            backgroundSize: isAnswering ? 'cover' : '400%',
+            // Shape: round to square
+            borderRadius: isAnswering ? '8px' : '50%',
+            // ⚡⚡ Aspect Ratio Transition ⚡⚡
+            // Guess: square (1:1), Answer: landscape (16:9)
+            aspectRatio: isAnswering ? '16 / 9' : '1 / 1',
+            // Correct transition logic (only when answering)
+            transition: isAnswering ? 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)' : 'none'
+          }">
+        </div>
+  
+        <div class="options-grid">
+          <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+        </div>
+        <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
       </div>
-      <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
     </div>
   </div>
-</div>
-<script>
-  const { createApp, ref, computed, onMounted } = Vue;
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
-
-  createApp({
-    setup() {
-      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
-      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
-      const isCorrect = ref(null), feedbackMessage = ref('');
-      const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
-
-      const fetchQuestions = async () => {
-        try {
-          loading.value = true;
-          // 注意：game1.html 用 game1，game2.html 用 game2
-          const res = await fetch(`${GAS_API_URL}?game=ImageGame&t=${Date.now()}`);
-          const json = await res.json();
-          
-          if (json.status === 'success') {
-            questions.value = json.data;
-          } else {
-            console.error("後端回傳錯誤：", json.message);
-            alert(`API 發生錯誤：${json.message}`);
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
+  
+    createApp({
+      setup() {
+        const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+        const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+        const isCorrect = ref(null), feedbackMessage = ref('');
+        const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
+  
+        const fetchQuestions = async () => {
+          try {
+            loading.value = true;
+            // 注意：game1.html 用 game1，game2.html 用 game2
+            const res = await fetch(`${GAS_API_URL}?game=ImageGame&t=${Date.now()}`);
+            const json = await res.json();
+            
+            if (json.status === 'success') {
+              questions.value = json.data;
+            } else {
+              console.error("後端回傳錯誤：", json.message);
+              alert(`API 發生錯誤：${json.message}`);
+            }
+          } catch (err) {
+            console.error("Fetch 失敗：", err);
+            alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
+          } finally {
+            loading.value = false;
           }
-        } catch (err) {
-          console.error("Fetch 失敗：", err);
-          alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
-        } finally {
-          loading.value = false;
-        }
-      };
-
-      const selectOption = (opt) => {
-        isAnswering.value = true;
-        if (opt === currentQuestion.value.answer) {
-          score.value += 10; isCorrect.value = true; feedbackMessage.value = '洞察秋毫！';
-        } else {
-          isCorrect.value = false; feedbackMessage.value = `失策！正確是 ${currentQuestion.value.answer}`;
-        }
-        setTimeout(() => {
-          isCorrect.value = null; feedbackMessage.value = '';
-          if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
-          isAnswering.value = false;
-        }, 3000); 
-      };
-
-      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
-      onMounted(startGame);
-      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
-    }
-  }).mount('#app');
-</script>
+        };
+  
+        const selectOption = (opt) => {
+          isAnswering.value = true;
+          if (opt === currentQuestion.value.answer) {
+            score.value += 10; isCorrect.value = true; feedbackMessage.value = '洞察秋毫！';
+          } else {
+            isCorrect.value = false; feedbackMessage.value = `失策！正確是 ${currentQuestion.value.answer}`;
+          }
+          setTimeout(() => {
+            isCorrect.value = null; feedbackMessage.value = '';
+            if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
+            isAnswering.value = false;
+          }, 3000); 
+        };
+  
+        const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+        onMounted(startGame);
+        return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
