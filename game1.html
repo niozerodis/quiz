@@ -64,64 +64,65 @@
   </style>
 </head>
 <body>
-<div id="app">
-  <div class="game-container">
-    <div v-if="loading">召喚中...</div>
-    <div v-else-if="isGameOver">
-      <h2>挑戰結束</h2>
-      <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
-      <button @click="startGame" style="width:100%">再次進入峽谷</button>
-    </div>
-    <div v-else>
-      <div style="color: #a09b8c;">ROUND {{ currentQuestionIndex + 1 }} / 5</div>
-      <div class="display-area">
-        <template v-if="isAnswering">
-          <img :src="currentQuestion.imageUrl" class="reveal-img">
-          <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
-        </template>
-        <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
+  <a href="./index.html" class="back-to-lobby">⬅ 返回大廳</a>
+  <div id="app">
+    <div class="game-container">
+      <div v-if="loading">召喚中...</div>
+      <div v-else-if="isGameOver">
+        <h2>挑戰結束</h2>
+        <div style="font-size: 32px; color: var(--hex-gold); margin: 20px 0;">{{ score }} / 50</div>
+        <button @click="startGame" style="width:100%">再次進入峽谷</button>
       </div>
-      <div class="options-grid">
-        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+      <div v-else>
+        <div style="color: #a09b8c;">ROUND {{ currentQuestionIndex + 1 }} / 5</div>
+        <div class="display-area">
+          <template v-if="isAnswering">
+            <img :src="currentQuestion.imageUrl" class="reveal-img">
+            <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
+          </template>
+          <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
+        </div>
+        <div class="options-grid">
+          <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+        </div>
+        <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
       </div>
-      <div class="feedback" :style="{ color: isCorrect ? '#00ff00' : '#ff4444' }">{{ feedbackMessage }}</div>
     </div>
   </div>
-</div>
-<script>
-  const { createApp, ref, computed, onMounted } = Vue;
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
-  createApp({
-    setup() {
-      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
-      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
-      const isCorrect = ref(null), feedbackMessage = ref('');
-      const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
-      const fetchQuestions = async () => {
-        loading.value = true;
-        const res = await fetch(`${GAS_API_URL}?game=EmojiGame&t=${Date.now()}`);
-        const json = await res.json();
-        questions.value = json.data;
-        loading.value = false;
-      };
-      const selectOption = (opt) => {
-        isAnswering.value = true;
-        if (opt === currentQuestion.value.answer) {
-          score.value += 10; isCorrect.value = true; feedbackMessage.value = '精準預測！';
-        } else {
-          isCorrect.value = false; feedbackMessage.value = `失誤！這是 ${currentQuestion.value.answer}`;
-        }
-        setTimeout(() => {
-          isCorrect.value = null; feedbackMessage.value = '';
-          if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
-          isAnswering.value = false;
-        }, 2500);
-      };
-      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
-      onMounted(startGame);
-      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
-    }
-  }).mount('#app');
-</script>
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
+    createApp({
+      setup() {
+        const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+        const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+        const isCorrect = ref(null), feedbackMessage = ref('');
+        const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
+        const fetchQuestions = async () => {
+          loading.value = true;
+          const res = await fetch(`${GAS_API_URL}?game=EmojiGame&t=${Date.now()}`);
+          const json = await res.json();
+          questions.value = json.data;
+          loading.value = false;
+        };
+        const selectOption = (opt) => {
+          isAnswering.value = true;
+          if (opt === currentQuestion.value.answer) {
+            score.value += 10; isCorrect.value = true; feedbackMessage.value = '精準預測！';
+          } else {
+            isCorrect.value = false; feedbackMessage.value = `失誤！這是 ${currentQuestion.value.answer}`;
+          }
+          setTimeout(() => {
+            isCorrect.value = null; feedbackMessage.value = '';
+            if (currentQuestionIndex.value < 4) currentQuestionIndex.value++; else isGameOver.value = true;
+            isAnswering.value = false;
+          }, 2500);
+        };
+        const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+        onMounted(startGame);
+        return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
