@@ -75,106 +75,128 @@
       0% { filter: contrast(200%) brightness(150%) hue-rotate(90deg); opacity: 0; transform: scale(1.05); } 
       100% { filter: contrast(100%) brightness(100%) hue-rotate(0deg); opacity: 1; transform: scale(1); } 
     }
+    .back-to-lobby {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-decoration: none;
+      background: rgba(0, 229, 255, 0.05);
+      color: var(--ww-cyan);
+      border: 1px solid var(--ww-border);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .back-to-lobby:hover {
+      background: var(--ww-cyan-dark);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0,229,255,0.6);
+    }
   </style>
 </head>
 <body>
-<div id="app">
-  <div class="game-container">
-    <div class="title-text" style="margin-bottom: 15px;">Wuthering Waves Terminal</div>
-
-    <div v-if="loading" style="color: var(--ww-cyan); margin: 40px 0;">連線至索拉里斯資料庫...</div>
-    
-    <div v-else-if="isGameOver">
-      <h2 style="color: #fff;">分析完成</h2>
-      <div style="font-size: 36px; color: var(--ww-cyan); margin: 20px 0; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
-        {{ score }} / 100
-      </div>
-      <button @click="startGame" style="width:100%">重新執行分析</button>
-    </div>
-    
-    <div v-else>
-      <div style="color: #888; font-size: 14px; display: flex; justify-content: space-between; padding: 0 5px;">
-        <span>檔案 {{ currentQuestionIndex + 1 }} / 10</span>
-        <span style="color: var(--ww-gold);">Score: {{ score }}</span>
+  <a href="./index.html" class="back-to-lobby">⬅ 終止分析 (返回)</a>
+  <div id="app">
+    <div class="game-container">
+      <div class="title-text" style="margin-bottom: 15px;">Wuthering Waves Terminal</div>
+  
+      <div v-if="loading" style="color: var(--ww-cyan); margin: 40px 0;">連線至索拉里斯資料庫...</div>
+      
+      <div v-else-if="isGameOver">
+        <h2 style="color: #fff;">分析完成</h2>
+        <div style="font-size: 36px; color: var(--ww-cyan); margin: 20px 0; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
+          {{ score }} / 100
+        </div>
+        <button @click="startGame" style="width:100%">重新執行分析</button>
       </div>
       
-      <div class="display-area" :style="{ alignItems: isAnswering ? 'flex-start' : 'center' }">
-        <template v-if="isAnswering">
-          <img v-if="currentQuestion.imageUrl" :src="currentQuestion.imageUrl" class="reveal-img">
-          <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
-        </template>
-        <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
-      </div>
-      
-      <div class="options-grid">
-        <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
-      </div>
-      
-      <div class="feedback" :style="{ color: isCorrect ? 'var(--ww-cyan)' : '#ff4444' }">
-        {{ feedbackMessage }}
+      <div v-else>
+        <div style="color: #888; font-size: 14px; display: flex; justify-content: space-between; padding: 0 5px;">
+          <span>檔案 {{ currentQuestionIndex + 1 }} / 10</span>
+          <span style="color: var(--ww-gold);">Score: {{ score }}</span>
+        </div>
+        
+        <div class="display-area" :style="{ alignItems: isAnswering ? 'flex-start' : 'center' }">
+          <template v-if="isAnswering">
+            <img v-if="currentQuestion.imageUrl" :src="currentQuestion.imageUrl" class="reveal-img">
+            <div class="hero-name-overlay">{{ currentQuestion.answer }}</div>
+          </template>
+          <div v-else class="emoji-text">{{ currentQuestion.emoji }}</div>
+        </div>
+        
+        <div class="options-grid">
+          <button v-for="opt in currentQuestion.options" @click="selectOption(opt)" :disabled="isAnswering">{{ opt }}</button>
+        </div>
+        
+        <div class="feedback" :style="{ color: isCorrect ? 'var(--ww-cyan)' : '#ff4444' }">
+          {{ feedbackMessage }}
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<script>
-  const { createApp, ref, computed, onMounted } = Vue;
   
-  // ⚡ 貼上你發布的最新版 GAS 網址
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
-
-  createApp({
-    setup() {
-      const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
-      const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
-      const isCorrect = ref(null), feedbackMessage = ref('');
-      const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
-
-      const fetchQuestions = async () => {
-        try {
-          loading.value = true;
-          // 呼叫 game3 參數
-          const res = await fetch(`${GAS_API_URL}?game=WWQuestion&t=${Date.now()}`);
-          const json = await res.json();
-          
-          if (json.status === 'success') {
-            questions.value = json.data;
-          } else {
-            console.error("後端回傳錯誤：", json.message);
-            alert(`API 發生錯誤：${json.message}`);
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    // ⚡ 貼上你發布的最新版 GAS 網址
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec';
+  
+    createApp({
+      setup() {
+        const questions = ref([]), currentQuestionIndex = ref(0), score = ref(0);
+        const loading = ref(true), isGameOver = ref(false), isAnswering = ref(false);
+        const isCorrect = ref(null), feedbackMessage = ref('');
+        const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
+  
+        const fetchQuestions = async () => {
+          try {
+            loading.value = true;
+            // 呼叫 game3 參數
+            const res = await fetch(`${GAS_API_URL}?game=WWQuestion&t=${Date.now()}`);
+            const json = await res.json();
+            
+            if (json.status === 'success') {
+              questions.value = json.data;
+            } else {
+              console.error("後端回傳錯誤：", json.message);
+              alert(`API 發生錯誤：${json.message}`);
+            }
+          } catch (err) {
+            console.error("Fetch 失敗：", err);
+            alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
+          } finally {
+            loading.value = false;
           }
-        } catch (err) {
-          console.error("Fetch 失敗：", err);
-          alert("網路請求失敗，請確認 GAS_API_URL 網址是否正確。");
-        } finally {
-          loading.value = false;
-        }
-      };
-
-      const selectOption = (opt) => {
-        isAnswering.value = true;
-        if (opt === currentQuestion.value.answer) {
-          score.value += 10; isCorrect.value = true; feedbackMessage.value = '共鳴確認！';
-        } else {
-          isCorrect.value = false; feedbackMessage.value = `錯誤！目標為 ${currentQuestion.value.answer}`;
-        }
-        setTimeout(() => {
-          isCorrect.value = null; feedbackMessage.value = '';
-          // 👈 這裡改成小於 9，因為總共有 10 題 (index 0~9)
-          if (currentQuestionIndex.value < 9) {
-            currentQuestionIndex.value++;
+        };
+  
+        const selectOption = (opt) => {
+          isAnswering.value = true;
+          if (opt === currentQuestion.value.answer) {
+            score.value += 10; isCorrect.value = true; feedbackMessage.value = '共鳴確認！';
           } else {
-            isGameOver.value = true;
+            isCorrect.value = false; feedbackMessage.value = `錯誤！目標為 ${currentQuestion.value.answer}`;
           }
-          isAnswering.value = false;
-        }, 1500);
-      };
-
-      const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
-      onMounted(startGame);
-      return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
-    }
-  }).mount('#app');
-</script>
+          setTimeout(() => {
+            isCorrect.value = null; feedbackMessage.value = '';
+            // 👈 這裡改成小於 9，因為總共有 10 題 (index 0~9)
+            if (currentQuestionIndex.value < 9) {
+              currentQuestionIndex.value++;
+            } else {
+              isGameOver.value = true;
+            }
+            isAnswering.value = false;
+          }, 1500);
+        };
+  
+        const startGame = () => { isGameOver.value = false; score.value = 0; currentQuestionIndex.value = 0; fetchQuestions(); };
+        onMounted(startGame);
+        return { loading, isGameOver, score, currentQuestionIndex, currentQuestion, isAnswering, isCorrect, feedbackMessage, startGame, selectOption };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
