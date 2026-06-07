@@ -62,146 +62,165 @@
     }
     button:hover { background-color: #e5954c; }
     .success-text { color: #27ae60; font-size: 20px; font-weight: bold; margin: 15px 0; }
+    .back-to-lobby {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-decoration: none;
+      background-color: var(--cat-orange);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(255, 176, 103, 0.3);
+      z-index: 100;
+    }
+    .back-to-lobby:hover {
+      background-color: #e5954c;
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
-
-<div id="app">
-  <div class="game-container">
-    <h2>🐾 貓咪尋塊拼圖 🐾</h2>
-    
-    <div v-if="loading" style="margin: 40px 0;">正在誘拐貓咪前來...</div>
-    
-    <div v-else>
-      <div class="stats-bar">
-        <span>步數：{{ moves }}</span>
-        <span v-if="isWin" style="color: #27ae60;">得分：{{ score }}</span>
-      </div>
-
-      <div class="puzzle-board" v-if="!isWin">
-        <div 
-          v-for="(piece, index) in pieces" 
-          :key="piece.id"
-          class="puzzle-piece"
-          :class="{ selected: selectedIndex === index }"
-          :style="{
-            backgroundImage: `url(${catData.imageUrl})`,
-            backgroundPosition: piece.bgPos,
-          }"
-          @click="clickPiece(index)"
-        ></div>
-      </div>
-
+  <a href="./index.html" class="back-to-lobby">⬅ 回大廳</a>
+  <div id="app">
+    <div class="game-container">
+      <h2>🐾 貓咪尋塊拼圖 🐾</h2>
+      
+      <div v-if="loading" style="margin: 40px 0;">正在誘拐貓咪前來...</div>
+      
       <div v-else>
-        <div class="success-text">🎉 核心共鳴！完成拼圖！</div>
-        <img :src="catData.imageUrl" style="width: 100%; border-radius: 8px; margin-bottom: 15px; border: 2px solid var(--cat-dark);">
-        <h3 style="margin: 5px 0 15px 0;">主體：{{ catData.name }}</h3>
+        <div class="stats-bar">
+          <span>步數：{{ moves }}</span>
+          <span v-if="isWin" style="color: #27ae60;">得分：{{ score }}</span>
+        </div>
+  
+        <div class="puzzle-board" v-if="!isWin">
+          <div 
+            v-for="(piece, index) in pieces" 
+            :key="piece.id"
+            class="puzzle-piece"
+            :class="{ selected: selectedIndex === index }"
+            :style="{
+              backgroundImage: `url(${catData.imageUrl})`,
+              backgroundPosition: piece.bgPos,
+            }"
+            @click="clickPiece(index)"
+          ></div>
+        </div>
+  
+        <div v-else>
+          <div class="success-text">🎉 核心共鳴！完成拼圖！</div>
+          <img :src="catData.imageUrl" style="width: 100%; border-radius: 8px; margin-bottom: 15px; border: 2px solid var(--cat-dark);">
+          <h3 style="margin: 5px 0 15px 0;">主體：{{ catData.name }}</h3>
+        </div>
+  
+        <button @click="startNewPuzzle">{{ isWin ? '下一隻貓咪' : '重新洗牌' }}</button>
       </div>
-
-      <button @click="startNewPuzzle">{{ isWin ? '下一隻貓咪' : '重新洗牌' }}</button>
     </div>
   </div>
-</div>
-
-<script>
-  const { createApp, ref, onMounted } = Vue;
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec'; // ⚡ 記得修改這裡 ⚡
-
-  createApp({
-    setup() {
-      const catData = ref({});
-      const pieces = ref([]);
-      const selectedIndex = ref(null);
-      const moves = ref(0);
-      const score = ref(100);
-      const loading = ref(true);
-      const isWin = ref(false);
-
-      // 計算 3x3 拼圖每塊背景位置的輔助函式
-      const getBgPos = (id) => {
-        const row = Math.floor(id / 3);
-        const col = id % 3;
-        // 300% 尺寸下，對齊點分別是 0%, 50%, 100%
-        return `${(col / 2) * 100}% ${(row / 2) * 100}%`;
-      };
-
-      const fetchCatImage = async () => {
-        try {
-          loading.value = true;
-          isWin.value = false;
-          moves.value = 0;
-          selectedIndex.value = null;
-
-          const res = await fetch(`${GAS_API_URL}?game=CatQuestion&t=${Date.now()}`);
-          const json = await res.json();
-          
-          if (json.status === 'success') {
-            catData.value = json.data;
-            initializePuzzle();
-          } else {
-            alert(`後端錯誤: ${json.message}`);
-          }
-        } catch (err) {
-          alert("無法連線至後端系統。");
-        } finally {
-          loading.value = false;
-        }
-      };
-
-      const initializePuzzle = () => {
-        // 生成 9 片拼圖的正確資料
-        let basePieces = Array.from({ length: 9 }, (_, i) => ({
-          id: i,
-          bgPos: getBgPos(i)
-        }));
-
-        // 打亂順序 (確保不會一開始就是完成狀態)
-        do {
-          basePieces.sort(() => Math.random() - 0.5);
-        } while (checkWinCondition(basePieces));
-
-        pieces.value = basePieces;
-      };
-
-      const clickPiece = (index) => {
-        if (selectedIndex.value === null) {
-          // 選擇第一塊
-          selectedIndex.value = index;
-        } else {
-          // 點擊第二塊，執行內部位置交換
-          if (selectedIndex.value !== index) {
-            const temp = pieces.value[selectedIndex.value];
-            pieces.value[selectedIndex.value] = pieces.value[index];
-            pieces.value[index] = temp;
+  
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec'; // ⚡ 記得修改這裡 ⚡
+  
+    createApp({
+      setup() {
+        const catData = ref({});
+        const pieces = ref([]);
+        const selectedIndex = ref(null);
+        const moves = ref(0);
+        const score = ref(100);
+        const loading = ref(true);
+        const isWin = ref(false);
+  
+        // 計算 3x3 拼圖每塊背景位置的輔助函式
+        const getBgPos = (id) => {
+          const row = Math.floor(id / 3);
+          const col = id % 3;
+          // 300% 尺寸下，對齊點分別是 0%, 50%, 100%
+          return `${(col / 2) * 100}% ${(row / 2) * 100}%`;
+        };
+  
+        const fetchCatImage = async () => {
+          try {
+            loading.value = true;
+            isWin.value = false;
+            moves.value = 0;
+            selectedIndex.value = null;
+  
+            const res = await fetch(`${GAS_API_URL}?game=CatQuestion&t=${Date.now()}`);
+            const json = await res.json();
             
-            moves.value++;
+            if (json.status === 'success') {
+              catData.value = json.data;
+              initializePuzzle();
+            } else {
+              alert(`後端錯誤: ${json.message}`);
+            }
+          } catch (err) {
+            alert("無法連線至後端系統。");
+          } finally {
+            loading.value = false;
           }
-          // 清空選取狀態
-          selectedIndex.value = null;
-          
-          // 檢查是否通關
-          if (checkWinCondition(pieces.value)) {
-            isWin.value = true;
-            // 分數計算公式：從 100 分開始扣步數，最低 10 分
-            score.value = Math.max(10, 100 - moves.value * 2);
+        };
+  
+        const initializePuzzle = () => {
+          // 生成 9 片拼圖的正確資料
+          let basePieces = Array.from({ length: 9 }, (_, i) => ({
+            id: i,
+            bgPos: getBgPos(i)
+          }));
+  
+          // 打亂順序 (確保不會一開始就是完成狀態)
+          do {
+            basePieces.sort(() => Math.random() - 0.5);
+          } while (checkWinCondition(basePieces));
+  
+          pieces.value = basePieces;
+        };
+  
+        const clickPiece = (index) => {
+          if (selectedIndex.value === null) {
+            // 選擇第一塊
+            selectedIndex.value = index;
+          } else {
+            // 點擊第二塊，執行內部位置交換
+            if (selectedIndex.value !== index) {
+              const temp = pieces.value[selectedIndex.value];
+              pieces.value[selectedIndex.value] = pieces.value[index];
+              pieces.value[index] = temp;
+              
+              moves.value++;
+            }
+            // 清空選取狀態
+            selectedIndex.value = null;
+            
+            // 檢查是否通關
+            if (checkWinCondition(pieces.value)) {
+              isWin.value = true;
+              // 分數計算公式：從 100 分開始扣步數，最低 10 分
+              score.value = Math.max(10, 100 - moves.value * 2);
+            }
           }
-        }
-      };
-
-      const checkWinCondition = (arr) => {
-        // 當每一片的現有位置 index 等於它原本的 id，代表完全拼對
-        return arr.every((piece, index) => piece.id === index);
-      };
-
-      const startNewPuzzle = () => {
-        fetchCatImage();
-      };
-
-      onMounted(startNewPuzzle);
-
-      return { catData, pieces, selectedIndex, moves, score, loading, isWin, clickPiece, startNewPuzzle };
-    }
-  }).mount('#app');
-</script>
+        };
+  
+        const checkWinCondition = (arr) => {
+          // 當每一片的現有位置 index 等於它原本的 id，代表完全拼對
+          return arr.every((piece, index) => piece.id === index);
+        };
+  
+        const startNewPuzzle = () => {
+          fetchCatImage();
+        };
+  
+        onMounted(startNewPuzzle);
+  
+        return { catData, pieces, selectedIndex, moves, score, loading, isWin, clickPiece, startNewPuzzle };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
