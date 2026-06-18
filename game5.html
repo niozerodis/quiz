@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字密室逃脫</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #game-container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+        h1 { text-align: center; border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
+        #story-text { min-height: 80px; margin-bottom: 20px; line-height: 1.5; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        button {
+            background-color: transparent;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        button:hover { background-color: #00ff00; color: #121212; }
+        #door-panel { display: none; margin-top: 20px; border-top: 1px dashed #00ff00; padding-top: 20px; }
+        input {
+            background-color: #000; color: #00ff00;
+            border: 1px solid #00ff00; padding: 10px; font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>逃離書房</h1>
+    <div id="story-text">你醒來發現自己被反鎖在一間昏暗的書房裡。四周只有一個書架、一張書桌、一幅掛畫，以及一扇帶著密碼鎖的鐵門。</div>
+    
+    <div class="btn-group">
+        <button onclick="investigate('bookshelf')">調查書架</button>
+        <button onclick="investigate('desk')">調查書桌</button>
+        <button onclick="investigate('painting')">調查掛畫</button>
+        <button onclick="investigate('door')">檢查大門</button>
+    </div>
+
+    <div id="door-panel">
+        <p>請輸入三位數密碼：</p>
+        <input type="text" id="password-input" maxlength="3" placeholder="___">
+        <button onclick="unlockDoor()" id="submit-btn">解鎖</button>
+        <p id="loading-msg" style="display:none;">驗證中，請稍候...</p>
+    </div>
+</div>
+
+<script>
+    // ★★★ 將這裡的 URL 替換成你剛剛部署的 Apps Script 網址 ★★★
+    const API_URL = "你的_APPS_SCRIPT_WEB_APP_URL_填在這裡";
+
+    const storyEl = document.getElementById('story-text');
+    const doorPanel = document.getElementById('door-panel');
+
+    function investigate(target) {
+        doorPanel.style.display = 'none'; // 隱藏密碼面板
+        
+        switch(target) {
+            case 'bookshelf':
+                storyEl.innerHTML = "書架上佈滿灰塵，你發現一本紅色的書特別乾淨。翻開第一頁，上面用紅筆寫著一個大大的數字：<b>「7」</b>。";
+                break;
+            case 'desk':
+                storyEl.innerHTML = "書桌上有一張紙條，上面寫著一道簡單的算術題：<br><i>「蜘蛛的腿數 減去 人類的腿數 = ？」</i><br>（你心裡默算：8 - 2 = <b>6</b>）";
+                break;
+            case 'painting':
+                storyEl.innerHTML = "牆上掛著一幅靜物畫，畫框右下角隱約刻著一行小字：<br><i>「蘋果的數量就是最後的鑰匙」</i>。<br>你數了數，畫裡總共有 <b>4</b> 顆蘋果。";
+                break;
+            case 'door':
+                storyEl.innerHTML = "一扇厚重的鐵門，門把上裝了一個電子數字鍵盤，看起來需要輸入三位數密碼。";
+                doorPanel.style.display = 'block'; // 顯示密碼面板
+                break;
+        }
+    }
+
+    function unlockDoor() {
+        const code = document.getElementById('password-input').value;
+        const btn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading-msg');
+
+        if(code.length !== 3) {
+            alert("請輸入三位數密碼！");
+            return;
+        }
+
+        btn.style.display = 'none';
+        loading.style.display = 'block';
+
+        // 呼叫 Google Apps Script API
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ code: code }),
+            // 使用 text/plain 可以避免跨網域(CORS)的 OPTIONS 預檢請求錯誤
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.style.display = 'inline-block';
+            loading.style.display = 'none';
+            storyEl.innerHTML = data.message;
+            
+            if(data.success) {
+                document.querySelector('.btn-group').style.display = 'none';
+                doorPanel.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            btn.style.display = 'inline-block';
+            loading.style.display = 'none';
+            alert("伺服器連線失敗，請稍後再試！");
+            console.error("Error:", error);
+        });
+    }
+</script>
+
+</body>
+</html>
