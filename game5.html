@@ -66,7 +66,7 @@
 
 <script>
     // ★★★ 將這裡的 URL 替換成你剛剛部署的 Apps Script 網址 ★★★
-    const API_URL = "你的_APPS_SCRIPT_WEB_APP_URL_填在這裡";
+    const API_URL = "https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec";
 
     const storyEl = document.getElementById('story-text');
     const doorPanel = document.getElementById('door-panel');
@@ -104,22 +104,26 @@
         btn.style.display = 'none';
         loading.style.display = 'block';
 
-        // 呼叫 Google Apps Script API
-        fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ code: code }),
-            // 使用 text/plain 可以避免跨網域(CORS)的 OPTIONS 預檢請求錯誤
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
+        // 配合你現有的 Router.gs，改用 GET 方法，並把遊戲類型和密碼帶在網址後面
+        const requestUrl = `${API_URL}?game=EscapeQuestion&code=${code}`;
+
+        fetch(requestUrl)
         .then(response => response.json())
-        .then(data => {
+        .then(res => {
             btn.style.display = 'inline-block';
             loading.style.display = 'none';
-            storyEl.innerHTML = data.message;
-            
-            if(data.success) {
-                document.querySelector('.btn-group').style.display = 'none';
-                doorPanel.style.display = 'none';
+
+            // 檢查你的 router 回傳的 status
+            if (res.status === 'success') {
+                const gameData = res.data; // 這邊對應到 checkEscapeCode 回傳的物件
+                storyEl.innerHTML = gameData.message;
+                
+                if(gameData.success) {
+                    document.querySelector('.btn-group').style.display = 'none';
+                    doorPanel.style.display = 'none';
+                }
+            } else {
+                alert("後端發生錯誤：" + res.message);
             }
         })
         .catch(error => {
