@@ -19,75 +19,71 @@
             position: relative;
         }
         .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #c8aa6e;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            border: 1px solid #c8aa6e;
-            padding: 8px 15px;
-            border-radius: 6px;
-            transition: all 0.3s;
-            background-color: rgba(200, 170, 110, 0.1);
+            position: absolute; top: 20px; left: 20px; color: #c8aa6e;
+            text-decoration: none; font-weight: bold; font-size: 16px;
+            border: 1px solid #c8aa6e; padding: 8px 15px; border-radius: 6px;
+            transition: all 0.3s; background-color: rgba(200, 170, 110, 0.1);
         }
         .back-btn:hover { background-color: #c8aa6e; color: #0a1428; }
 
         #game-container {
-            background-color: #1a1f26;
-            padding: 30px 40px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 715px;
-            border: 2px solid #54222c;
+            background-color: #1a1f26; padding: 30px 40px; border-radius: 12px;
+            width: 100%; max-width: 680px; border: 2px solid #54222c;
             box-shadow: 0 0 40px rgba(155, 45, 67, 0.15);
         }
         h1 {
-            text-align: center; color: #ff4d6d;
-            letter-spacing: 2px; margin-top: 0; margin-bottom: 20px;
-            border-bottom: 1px solid #785a28; padding-bottom: 15px;
+            text-align: center; color: #ff4d6d; letter-spacing: 2px; 
+            margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #785a28; padding-bottom: 15px;
         }
         #story-text {
-            min-height: 140px; margin-bottom: 25px;
-            line-height: 1.7; font-size: 16px; color: #d4c5a9;
-            background: #0f1217; padding: 18px; border-radius: 6px;
-            border-left: 4px solid #9b2d43;
+            min-height: 140px; margin-bottom: 25px; line-height: 1.7; font-size: 16px; color: #d4c5a9;
+            background: #0f1217; padding: 18px; border-radius: 6px; border-left: 4px solid #9b2d43;
         }
         .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
         button {
-            background-color: #0f1217; color: #f0e6d2;
-            border: 1px solid #785a28; border-radius: 6px;
-            padding: 10px 15px; cursor: pointer; font-size: 15px;
-            transition: all 0.3s ease; flex: 1; min-width: 110px;
-            white-space: pre;
+            background-color: #0f1217; color: #f0e6d2; border: 1px solid #785a28; border-radius: 6px;
+            padding: 10px 15px; cursor: pointer; font-size: 15px; transition: all 0.3s ease; flex: 1; min-width: 110px;
         }
         button:hover { background-color: #2d333b; border-color: #c8aa6e; transform: translateY(-2px); }
         
-        .panel { 
-            display: none; margin-top: 20px; 
-            border-top: 1px dashed #785a28; padding-top: 20px; 
-        }
+        .panel { display: none; margin-top: 20px; border-top: 1px dashed #785a28; padding-top: 20px; }
         input {
-            background-color: #050a14; color: #00e5ff;
-            border: 1px solid #008899; padding: 12px;
-            font-size: 16px; border-radius: 4px; text-align: center;
-            letter-spacing: 2px; width: 140px;
+            background-color: #050a14; color: #00e5ff; border: 1px solid #008899; padding: 12px;
+            font-size: 16px; border-radius: 4px; text-align: center; letter-spacing: 2px; width: 140px;
         }
         .submit-btn { background-color: #005566; border-color: #00e5ff; margin-left: 10px; flex: none; }
         .submit-btn:hover { background-color: #008899; }
         b { color: #ffb067; font-weight: normal; }
         .quote { font-style: italic; color: #8892b0; }
+
+        /* 起始畫面 (輸入姓名) */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(5, 10, 20, 0.95); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #start-overlay h2 { color: #ff4d6d; margin-bottom: 10px; }
+        #start-overlay p { color: #d4c5a9; margin-bottom: 20px; }
+        #start-overlay input { width: 250px; margin-bottom: 20px; letter-spacing: normal; text-align: left; }
+        #start-overlay button { width: 250px; flex: none; background-color: #9b2d43; border-color: #ff4d6d; font-weight: bold; }
+        #start-overlay button:hover { background-color: #ff4d6d; color: #000; }
     </style>
 </head>
 <body>
 
-<a href="./index.html" class="back-btn">⬅ 返回大廳</a>
+<a href="./index.html" class="back-btn">⬅ 回大廳</a>
+
+<div id="start-overlay">
+    <h2>🚪 偵探的最後考驗</h2>
+    <p>請輸入你的探員代號，計時將在確認後開始：</p>
+    <input type="text" id="player-name" placeholder="輸入姓名或暱稱" maxlength="15">
+    <button onclick="startGame()">確認並開始計時</button>
+</div>
 
 <div id="game-container">
     <h1>🚪 偵探的最後考驗</h1>
     <div id="story-text">
-        你收到失蹤已久的偵探好友「N」的匿名信，隻身來到他的秘密書房。<br>
+        你收到失蹤已久的偵探好友「K」的匿名信，隻身來到他的秘密書房。<br>
         剛踏入房間，身後的鐵門就「砰」一聲自動鎖死。<br>
         桌上的老舊收音機傳來他預錄的沙啞嗓音：<span class="quote">『如果你連這個基礎的考驗都無法通過，就別來找我了……你只有五分鐘，找出我留下的真相。』</span>
     </div>
@@ -122,9 +118,23 @@
     const doorPanel = document.getElementById('door-panel');
     const boxPanel = document.getElementById('box-panel');
 
-    let inventory = {
-        hasFlashlight: false 
-    };
+    let inventory = { hasFlashlight: false };
+    
+    // 記錄玩家狀態的變數
+    let playerName = "";
+    let startTime = 0;
+
+    // 開始遊戲並啟動計時
+    function startGame() {
+        const nameInput = document.getElementById('player-name').value.trim();
+        if (!nameInput) {
+            alert("請輸入代號才能開始任務！");
+            return;
+        }
+        playerName = nameInput;
+        document.getElementById('start-overlay').style.display = 'none'; // 隱藏起始畫面
+        startTime = Date.now(); // 記錄開始的時間點（毫秒）
+    }
 
     function hideAllPanels() {
         doorPanel.style.display = 'none';
@@ -133,16 +143,13 @@
 
     function investigate(target) {
         hideAllPanels();
-        
         switch(target) {
             case 'clock':
-                storyEl.innerHTML = "牆上掛著一個巨大的復古圓鐘。奇怪的是，鐘面的玻璃被人刻意敲碎了，<b>裡面的時針被硬生生拔走，只剩下一根長長的分針</b>。<br><br>旁邊的牆上用奇異筆草草寫著一句話：<span class='quote'>「多餘的時針只會干擾視線。專注於它每一『分』的落點，你就能看見目標的輪廓。」</span>";
+                storyEl.innerHTML = "牆上掛著一個巨大的復古圓鐘。奇怪的是，鐘面的玻璃被人刻意敲碎了，<b>裡面的時針被硬生生拔走，只剩下一根長長的分針</b>。<br><br>鐘框邊緣貼著一張泛黃的便條紙，上面寫著：<span class='quote'>『多餘的時針只會干擾視線。專注於它每一「分」的落點，你就能看見目標的輪廓。』</span>";
                 break;
-            
             case 'desk':
                 storyEl.innerHTML = "書桌上翻開著一本《失蹤前四日行程追蹤》。K 似乎在跟蹤某個目標，時間標註得異常精確：<br><br><b>Day 1</b>：08:55 咖啡廳 → 12:10 公司 → 17:35 廢棄工廠<br><b>Day 2</b>：09:00 碼頭 → 15:30 貨運站<br><b>Day 3</b>：07:00 飯店 → 10:15 銀行 → 12:30 餐館 → 16:45 後巷 → 20:00 飯店<br><b>Day 4</b>：06:25 書局 → 11:05 廣場 → 14:45 地下鐵 → 18:15 秘密據點<br><br>頁尾留著一句呢喃：<span class='quote'>『目標的行蹤，在鐘面上畫出了真相……』</span>";
                 break;
-                
             case 'bookshelf':
                 if (inventory.hasFlashlight) {
                     storyEl.innerHTML = "木盒已經被你打開了，裡面空無一物。書架上的犯罪學書籍似乎沒有其他夾帶的線索了。";
@@ -151,7 +158,6 @@
                     boxPanel.style.display = 'block';
                 }
                 break;
-
             case 'painting':
                 if (inventory.hasFlashlight) {
                     storyEl.innerHTML = "你打開「紫光手電筒」照向那幅向日葵油畫。<br>原本乾淨的畫布上，螢光塗料在紫光下產生了強烈的反應，浮現出 K 狂亂的字跡：<br><br><span class='quote'>『他們來了！快走！大門的覆寫密碼是：<b>5 9 2</b>』</span>";
@@ -159,7 +165,6 @@
                     storyEl.innerHTML = "這是一幅極其普通的梵谷《向日葵》仿作。你摸了摸畫布，表面似乎塗了一層特殊的透明塗層。<br>向日葵總是追尋著光芒，但普通的燈光似乎無法讓它顯露真容。";
                 }
                 break;
-            
             case 'door':
                 storyEl.innerHTML = "厚重的鐵門緊閉著。門把上方嵌著一個特製的電子密碼盤，螢幕上閃爍著冷酷的紅光，要求輸入<b>三位數的最終密碼</b>才能解鎖。<br>如果不快點找出密碼，K 的線索可能就要永遠中斷了。";
                 doorPanel.style.display = 'block';
@@ -192,7 +197,11 @@
         btn.style.display = 'none';
         loading.style.display = 'block';
 
-        const requestUrl = `${API_URL}?game=EscapeQuestion&code=${code}`;
+        // 結算花費秒數
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+        // 將玩家姓名與耗費秒數加進 URL 中
+        const requestUrl = `${API_URL}?game=EscapeQuestion&code=${code}&playerName=${encodeURIComponent(playerName)}&timeSpent=${timeSpent}`;
 
         fetch(requestUrl)
         .then(response => response.json())
@@ -206,11 +215,11 @@
                 if(gameData.success) {
                     document.querySelector('.btn-group').style.display = 'none';
                     doorPanel.style.display = 'none';
-                    // 通關後的特別劇情描述
-                    storyEl.innerHTML = "密碼正確！伴隨著『喀喀』一聲沉重的金屬音，鐵門緩緩向外推開。<br><br>門後並沒有致命的陷阱，地上只放著一個陳舊的公事包和一張前往下一個地點的車票。<br>收音機再次傳來 K 的聲音：<span class='quote'>『恭喜你通過了測試。帶上裝備，真實的狩獵現在才要開始。』</span><br><br><b>🎉 逃脫成功！你已獲取 K 的後續線索。</b>";
+                    storyEl.innerHTML = `密碼正確！伴隨著『喀喀』一聲沉重的金屬音，鐵門緩緩向外推開。<br><br><b>🎉 逃脫成功！</b><br>探員：${playerName}<br>耗時：${timeSpent} 秒<br><br>系統已將你的成績記錄至資料庫。`;
                     storyEl.style.color = '#00e5ff';
                     storyEl.style.borderColor = '#00e5ff';
                     storyEl.style.fontSize = '18px';
+                    storyEl.style.textAlign = 'center';
                 } else {
                     storyEl.innerHTML = gameData.message;
                 }
