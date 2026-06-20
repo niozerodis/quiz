@@ -18,7 +18,6 @@
             background-image: linear-gradient(rgba(10, 20, 40, 0.9), rgba(10, 20, 40, 0.95));
             position: relative;
         }
-        /* 返回按鈕樣式 */
         .back-btn {
             position: absolute;
             top: 20px;
@@ -89,10 +88,10 @@
 
 <div id="game-container">
     <h1>🚪 書房密室逃脫</h1>
-    <div id="story-text">你醒來發現自己被反鎖在一間昏暗的書房裡。四周只有一個書架、一張書桌、一幅掛畫，以及一扇帶著電子鎖的厚重鐵門。</div>
+    <div id="story-text">你醒來發現自己被反鎖在一間昏暗的書房裡。四周只有一個書架、一張書桌、牆上的四個掛鐘，以及一扇帶著電子鎖的厚重鐵門。</div>
     
     <div class="btn-group">
-        <button onclick="investigate('painting')">🔍 調查掛畫</button>
+        <button onclick="investigate('clocks')">🕒 調查掛鐘</button>
         <button onclick="investigate('bookshelf')">📚 調查書架</button>
         <button onclick="investigate('desk')">📝 調查書桌</button>
         <button onclick="investigate('door')">🚪 檢查大門</button>
@@ -120,7 +119,6 @@
     const doorPanel = document.getElementById('door-panel');
     const boxPanel = document.getElementById('box-panel');
 
-    // 遊戲狀態紀錄
     let inventory = {
         hasGlasses: false // 是否取得「紅色濾光鏡」
     };
@@ -134,8 +132,9 @@
         hideAllPanels();
         
         switch(target) {
-            case 'painting':
-                storyEl.innerHTML = "牆上掛著一幅古老的座鐘畫像。鐘面沒有數字，指針永遠停滯在某個時刻：<br>時針指著左側的 <b>IX</b>，分針指著右側的 <b>III</b>，秒針指著正下方的 <b>VI</b>。<br><span class='hint'>畫框底部刻著一行小字：『解碼之鑰：時、分、秒，以及【時減去分】的差值。』</span>";
+            case 'clocks':
+                // 完全移除提示，只保留客觀的指針位置描述
+                storyEl.innerHTML = "牆上並排掛著四個古董時鐘，每一個都只有時針和分針。滴答聲早已停止，指針僵死在固定的刻度上：<br><br>第一個：時針指著 <b>IX</b>，分針指著 <b>VII</b><br>第二個：時針指著 <b>XII</b>，分針指著 <b>VI</b><br>第三個：時針指著 <b>XII</b>，分針指著 <b>VI</b><br>第四個：時針指著 <b>IX</b>，分針指著 <b>VII</b>";
                 break;
             
             case 'bookshelf':
@@ -165,15 +164,15 @@
     // 書架木盒解謎邏輯 (前端驗證)
     function unlockBox() {
         const boxCode = document.getElementById('box-input').value;
-        // 密碼邏輯：IX(9), III(3), VI(6), 9-3(6) => 9366
-        if (boxCode === '9366') {
+        // 密碼邏輯：形狀 7, 1, 1, 7 => 7117
+        if (boxCode === '7117') {
             inventory.hasGlasses = true;
             hideAllPanels();
             storyEl.innerHTML = "「咔嗒！」密碼正確，木盒的鎖扣彈開了。<br>你在裡面找到了一副造型特殊的<b>「紅色濾光鏡」</b>。或許這個道具能幫你看清某些隱藏在混亂中的事物。";
         } else {
-            storyEl.innerHTML = "鎖頭紋風不動。看來密碼錯誤了，你可能需要重新推敲畫作中的提示。";
+            storyEl.innerHTML = "鎖頭紋風不動。密碼錯誤，看來你需要參透牆上時鐘指針所隱含的意義。";
         }
-        document.getElementById('box-input').value = ''; // 清空輸入框
+        document.getElementById('box-input').value = ''; 
     }
 
     // 大門解謎邏輯 (呼叫後端 API)
@@ -203,7 +202,6 @@
                 storyEl.innerHTML = gameData.message;
                 
                 if(gameData.success) {
-                    // 通關後隱藏所有按鈕與面板
                     document.querySelector('.btn-group').style.display = 'none';
                     doorPanel.style.display = 'none';
                     storyEl.style.color = '#00e5ff';
