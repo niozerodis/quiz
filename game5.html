@@ -16,7 +16,28 @@
             height: 100vh;
             margin: 0;
             background-image: linear-gradient(rgba(10, 20, 40, 0.9), rgba(10, 20, 40, 0.95));
+            position: relative;
         }
+        /* 返回按鈕樣式 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #c8aa6e;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            border: 1px solid #c8aa6e;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            background-color: rgba(200, 170, 110, 0.1);
+        }
+        .back-btn:hover {
+            background-color: #c8aa6e;
+            color: #0a1428;
+        }
+
         #game-container {
             background-color: #1e2328;
             padding: 40px;
@@ -32,9 +53,10 @@
             border-bottom: 1px solid #785a28; padding-bottom: 15px;
         }
         #story-text {
-            min-height: 100px; margin-bottom: 30px;
+            min-height: 110px; margin-bottom: 30px;
             line-height: 1.6; font-size: 16px; color: #c8aa6e;
             background: #111; padding: 15px; border-radius: 6px;
+            border-left: 4px solid #785a28;
         }
         .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
         button {
@@ -43,7 +65,7 @@
             padding: 12px 18px; cursor: pointer; font-size: 15px;
             transition: all 0.3s ease; flex: 1; min-width: 120px;
         }
-        button:hover { background-color: #2d333b; border-color: #c8aa6e; }
+        button:hover { background-color: #2d333b; border-color: #c8aa6e; transform: translateY(-2px); }
         
         .panel { 
             display: none; margin-top: 20px; 
@@ -53,14 +75,17 @@
             background-color: #0a1428; color: #00e5ff;
             border: 1px solid #008899; padding: 12px;
             font-size: 16px; border-radius: 4px; text-align: center;
-            letter-spacing: 2px; width: 120px;
+            letter-spacing: 2px; width: 140px;
         }
         .submit-btn { background-color: #005566; border-color: #00e5ff; margin-left: 10px; flex: none; }
         .submit-btn:hover { background-color: #008899; }
         b { color: #ffb067; }
+        .hint { font-style: italic; color: #a09b8c; }
     </style>
 </head>
 <body>
+
+<a href="./index.html" class="back-btn">⬅ 返回大廳</a>
 
 <div id="game-container">
     <h1>🚪 書房密室逃脫</h1>
@@ -74,16 +99,16 @@
     </div>
 
     <div id="box-panel" class="panel">
-        <p>木盒上有個四位數密碼鎖：</p>
+        <p>請輸入木盒上的四位數密碼：</p>
         <input type="text" id="box-input" maxlength="4" placeholder="輸入四位數">
-        <button onclick="unlockBox()" class="submit-btn">開啟木盒</button>
+        <button onclick="unlockBox()" class="submit-btn">嘗試開啟</button>
     </div>
 
     <div id="door-panel" class="panel">
         <p>鐵門電子鎖，請輸入最終三位數逃脫密碼：</p>
         <input type="text" id="password-input" maxlength="3" placeholder="輸入三位數">
         <button onclick="unlockDoor()" id="submit-btn" class="submit-btn">驗證解鎖</button>
-        <p id="loading-msg" style="display:none; color: #ffb067;">驗證中，請稍候...</p>
+        <p id="loading-msg" style="display:none; color: #ffb067; margin-top: 10px;">驗證中，請稍候...</p>
     </div>
 </div>
 
@@ -97,7 +122,7 @@
 
     // 遊戲狀態紀錄
     let inventory = {
-        hasStencil: false // 是否取得「透孔片」
+        hasGlasses: false // 是否取得「紅色濾光鏡」
     };
 
     function hideAllPanels() {
@@ -110,47 +135,48 @@
         
         switch(target) {
             case 'painting':
-                storyEl.innerHTML = "牆上的油畫畫著一位穿著考究的紳士，他手中握著一只懷錶。<br>仔細一看，懷錶的指針永遠停留在 <b>08:15</b>。";
+                storyEl.innerHTML = "牆上掛著一幅古老的座鐘畫像。鐘面沒有數字，指針永遠停滯在某個時刻：<br>時針指著左側的 <b>IX</b>，分針指著右側的 <b>III</b>，秒針指著正下方的 <b>VI</b>。<br><span class='hint'>畫框底部刻著一行小字：『解碼之鑰：時、分、秒，以及【時減去分】的差值。』</span>";
                 break;
             
             case 'bookshelf':
-                if (inventory.hasStencil) {
-                    storyEl.innerHTML = "木盒已經被你打開了，裡面空無一物。剩下的書本似乎沒有其他線索。";
+                if (inventory.hasGlasses) {
+                    storyEl.innerHTML = "木盒已經被你打開了，裡面空無一物。你已經仔細檢查過書架，沒有其他可用的線索了。";
                 } else {
-                    storyEl.innerHTML = "書架上擺滿了厚重的字典。你在角落發現了一個精緻的木盒，上面扣著一個需要輸入<b>四位數密碼</b>的鎖。";
+                    storyEl.innerHTML = "書架上擺滿了厚重的精裝書。你在中層發現了一個上了鎖的精緻木盒，上面扣著一個需要輸入<b>四位數密碼</b>的機關鎖。";
                     boxPanel.style.display = 'block';
                 }
                 break;
             
             case 'desk':
-                if (inventory.hasStencil) {
-                    storyEl.innerHTML = "你將取得的「透孔片」蓋在書桌那張密密麻麻的亂碼紙上。<br>多餘的數字被遮蔽了，透過孔洞，紙上浮現了三個清晰的數字：<b>「4」、「9」、「2」</b>。";
+                if (inventory.hasGlasses) {
+                    storyEl.innerHTML = "你戴上剛剛獲得的「紅色濾光鏡」再次查看那張圖紙。<br>原本雜亂的紅色干擾線條在鏡片下隱形了！底下隱藏的藍色筆跡清晰地浮現出三個數字：<b>「1」、「8」、「5」</b>。<br><span class='hint'>紙張右下角還寫著提示：『唯有將數字<b>由大至小</b>排列，方能引領你走向自由。』</span>";
                 } else {
-                    storyEl.innerHTML = "書桌上放著一張寫滿隨機數字的紙，毫無邏輯，看久了讓人眼花撩亂。似乎需要某種<b>過濾工具</b>才能解讀裡面的涵義。";
+                    storyEl.innerHTML = "書桌上平放著一張圖紙，上面佈滿了紅色與藍色重疊交錯的凌亂線條。紅色的墨水過於濃烈且雜亂無章，嚴重干擾了視線，完全看不出裡面是否藏著什麼訊息。";
                 }
                 break;
             
             case 'door':
-                storyEl.innerHTML = "大門緊閉，旁邊的電子鎖閃爍著紅光，看起來需要輸入<b>三位數密碼</b>才能開啟。";
+                storyEl.innerHTML = "這是一扇厚重的鐵門，門把上方嵌著一個電子密碼盤，螢幕上閃爍著紅光，要求輸入<b>三位數的最終密碼</b>才能解鎖。";
                 doorPanel.style.display = 'block';
                 break;
         }
     }
 
-    // 中間解謎邏輯 (前端驗證即可)
+    // 書架木盒解謎邏輯 (前端驗證)
     function unlockBox() {
         const boxCode = document.getElementById('box-input').value;
-        if (boxCode === '0815') {
-            inventory.hasStencil = true;
+        // 密碼邏輯：IX(9), III(3), VI(6), 9-3(6) => 9366
+        if (boxCode === '9366') {
+            inventory.hasGlasses = true;
             hideAllPanels();
-            storyEl.innerHTML = "「咔嗒！」密碼正確，木盒打開了。<br>你從裡面獲得了一張佈滿不規則孔洞的塑膠片（<b>透孔片</b>），邊緣寫著：<i>「將其覆蓋於混亂之上」</i>。";
+            storyEl.innerHTML = "「咔嗒！」密碼正確，木盒的鎖扣彈開了。<br>你在裡面找到了一副造型特殊的<b>「紅色濾光鏡」</b>。或許這個道具能幫你看清某些隱藏在混亂中的事物。";
         } else {
-            storyEl.innerHTML = "密碼錯誤，木盒打不開。線索會不會藏在房間的其他地方？";
+            storyEl.innerHTML = "鎖頭紋風不動。看來密碼錯誤了，你可能需要重新推敲畫作中的提示。";
         }
         document.getElementById('box-input').value = ''; // 清空輸入框
     }
 
-    // 最終解謎邏輯 (呼叫後端 API)
+    // 大門解謎邏輯 (呼叫後端 API)
     function unlockDoor() {
         const code = document.getElementById('password-input').value;
         const btn = document.getElementById('submit-btn');
@@ -180,8 +206,10 @@
                     // 通關後隱藏所有按鈕與面板
                     document.querySelector('.btn-group').style.display = 'none';
                     doorPanel.style.display = 'none';
-                    storyEl.style.color = '#00ff00';
+                    storyEl.style.color = '#00e5ff';
+                    storyEl.style.borderColor = '#00e5ff';
                     storyEl.style.fontSize = '18px';
+                    storyEl.style.textAlign = 'center';
                 }
             } else {
                 alert("後端發生錯誤：" + res.message);
