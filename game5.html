@@ -3,94 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字密室逃脫</title>
+    <title>書房密室逃脫</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            background-color: #121212;
-            color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a1428;
+            color: #f0e6d2;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            background-image: linear-gradient(rgba(10, 20, 40, 0.9), rgba(10, 20, 40, 0.95));
         }
         #game-container {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            background-color: #1e2328;
+            padding: 40px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 650px;
+            border: 2px solid #9b2d43;
+            box-shadow: 0 0 30px rgba(155, 45, 67, 0.2);
         }
-        h1 { text-align: center; border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
-        #story-text { min-height: 80px; margin-bottom: 20px; line-height: 1.5; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        h1 {
+            text-align: center; color: #ff4d6d;
+            letter-spacing: 2px; margin-top: 0; margin-bottom: 20px;
+            border-bottom: 1px solid #785a28; padding-bottom: 15px;
+        }
+        #story-text {
+            min-height: 100px; margin-bottom: 30px;
+            line-height: 1.6; font-size: 16px; color: #c8aa6e;
+            background: #111; padding: 15px; border-radius: 6px;
+        }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
         button {
-            background-color: transparent;
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
+            background-color: #111; color: #f0e6d2;
+            border: 1px solid #785a28; border-radius: 6px;
+            padding: 12px 18px; cursor: pointer; font-size: 15px;
+            transition: all 0.3s ease; flex: 1; min-width: 120px;
         }
-        button:hover { background-color: #00ff00; color: #121212; }
-        #door-panel { display: none; margin-top: 20px; border-top: 1px dashed #00ff00; padding-top: 20px; }
+        button:hover { background-color: #2d333b; border-color: #c8aa6e; }
+        
+        .panel { 
+            display: none; margin-top: 20px; 
+            border-top: 1px dashed #785a28; padding-top: 20px; 
+        }
         input {
-            background-color: #000; color: #00ff00;
-            border: 1px solid #00ff00; padding: 10px; font-family: inherit;
+            background-color: #0a1428; color: #00e5ff;
+            border: 1px solid #008899; padding: 12px;
+            font-size: 16px; border-radius: 4px; text-align: center;
+            letter-spacing: 2px; width: 120px;
         }
+        .submit-btn { background-color: #005566; border-color: #00e5ff; margin-left: 10px; flex: none; }
+        .submit-btn:hover { background-color: #008899; }
+        b { color: #ffb067; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h1>逃離書房</h1>
-    <div id="story-text">你醒來發現自己被反鎖在一間昏暗的書房裡。四周只有一個書架、一張書桌、一幅掛畫，以及一扇帶著密碼鎖的鐵門。</div>
+    <h1>🚪 書房密室逃脫</h1>
+    <div id="story-text">你醒來發現自己被反鎖在一間昏暗的書房裡。四周只有一個書架、一張書桌、一幅掛畫，以及一扇帶著電子鎖的厚重鐵門。</div>
     
     <div class="btn-group">
-        <button onclick="investigate('bookshelf')">調查書架</button>
-        <button onclick="investigate('desk')">調查書桌</button>
-        <button onclick="investigate('painting')">調查掛畫</button>
-        <button onclick="investigate('door')">檢查大門</button>
+        <button onclick="investigate('painting')">🔍 調查掛畫</button>
+        <button onclick="investigate('bookshelf')">📚 調查書架</button>
+        <button onclick="investigate('desk')">📝 調查書桌</button>
+        <button onclick="investigate('door')">🚪 檢查大門</button>
     </div>
 
-    <div id="door-panel">
-        <p>請輸入三位數密碼：</p>
-        <input type="text" id="password-input" maxlength="3" placeholder="___">
-        <button onclick="unlockDoor()" id="submit-btn">解鎖</button>
-        <p id="loading-msg" style="display:none;">驗證中，請稍候...</p>
+    <div id="box-panel" class="panel">
+        <p>木盒上有個四位數密碼鎖：</p>
+        <input type="text" id="box-input" maxlength="4" placeholder="輸入四位數">
+        <button onclick="unlockBox()" class="submit-btn">開啟木盒</button>
+    </div>
+
+    <div id="door-panel" class="panel">
+        <p>鐵門電子鎖，請輸入最終三位數逃脫密碼：</p>
+        <input type="text" id="password-input" maxlength="3" placeholder="輸入三位數">
+        <button onclick="unlockDoor()" id="submit-btn" class="submit-btn">驗證解鎖</button>
+        <p id="loading-msg" style="display:none; color: #ffb067;">驗證中，請稍候...</p>
     </div>
 </div>
 
 <script>
-    // ★★★ 將這裡的 URL 替換成你剛剛部署的 Apps Script 網址 ★★★
+    // ★★★ 將這裡的 URL 替換成你部署的 Router.gs Web App 網址 ★★★
     const API_URL = "https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec";
 
     const storyEl = document.getElementById('story-text');
     const doorPanel = document.getElementById('door-panel');
+    const boxPanel = document.getElementById('box-panel');
+
+    // 遊戲狀態紀錄
+    let inventory = {
+        hasStencil: false // 是否取得「透孔片」
+    };
+
+    function hideAllPanels() {
+        doorPanel.style.display = 'none';
+        boxPanel.style.display = 'none';
+    }
 
     function investigate(target) {
-        doorPanel.style.display = 'none'; // 隱藏密碼面板
+        hideAllPanels();
         
         switch(target) {
-            case 'bookshelf':
-                storyEl.innerHTML = "書架上佈滿灰塵，你發現一本紅色的書特別乾淨。翻開第一頁，上面用紅筆寫著一個大大的數字：<b>「7」</b>。";
-                break;
-            case 'desk':
-                storyEl.innerHTML = "書桌上有一張紙條，上面寫著一道簡單的算術題：<br><i>「蜘蛛的腿數 減去 人類的腿數 = ？」</i><br>（你心裡默算：8 - 2 = <b>6</b>）";
-                break;
             case 'painting':
-                storyEl.innerHTML = "牆上掛著一幅靜物畫，畫框右下角隱約刻著一行小字：<br><i>「蘋果的數量就是最後的鑰匙」</i>。<br>你數了數，畫裡總共有 <b>4</b> 顆蘋果。";
+                storyEl.innerHTML = "牆上的油畫畫著一位穿著考究的紳士，他手中握著一只懷錶。<br>仔細一看，懷錶的指針永遠停留在 <b>08:15</b>。";
                 break;
+            
+            case 'bookshelf':
+                if (inventory.hasStencil) {
+                    storyEl.innerHTML = "木盒已經被你打開了，裡面空無一物。剩下的書本似乎沒有其他線索。";
+                } else {
+                    storyEl.innerHTML = "書架上擺滿了厚重的字典。你在角落發現了一個精緻的木盒，上面扣著一個需要輸入<b>四位數密碼</b>的鎖。";
+                    boxPanel.style.display = 'block';
+                }
+                break;
+            
+            case 'desk':
+                if (inventory.hasStencil) {
+                    storyEl.innerHTML = "你將取得的「透孔片」蓋在書桌那張密密麻麻的亂碼紙上。<br>多餘的數字被遮蔽了，透過孔洞，紙上浮現了三個清晰的數字：<b>「4」、「9」、「2」</b>。";
+                } else {
+                    storyEl.innerHTML = "書桌上放著一張寫滿隨機數字的紙，毫無邏輯，看久了讓人眼花撩亂。似乎需要某種<b>過濾工具</b>才能解讀裡面的涵義。";
+                }
+                break;
+            
             case 'door':
-                storyEl.innerHTML = "一扇厚重的鐵門，門把上裝了一個電子數字鍵盤，看起來需要輸入三位數密碼。";
-                doorPanel.style.display = 'block'; // 顯示密碼面板
+                storyEl.innerHTML = "大門緊閉，旁邊的電子鎖閃爍著紅光，看起來需要輸入<b>三位數密碼</b>才能開啟。";
+                doorPanel.style.display = 'block';
                 break;
         }
     }
 
+    // 中間解謎邏輯 (前端驗證即可)
+    function unlockBox() {
+        const boxCode = document.getElementById('box-input').value;
+        if (boxCode === '0815') {
+            inventory.hasStencil = true;
+            hideAllPanels();
+            storyEl.innerHTML = "「咔嗒！」密碼正確，木盒打開了。<br>你從裡面獲得了一張佈滿不規則孔洞的塑膠片（<b>透孔片</b>），邊緣寫著：<i>「將其覆蓋於混亂之上」</i>。";
+        } else {
+            storyEl.innerHTML = "密碼錯誤，木盒打不開。線索會不會藏在房間的其他地方？";
+        }
+        document.getElementById('box-input').value = ''; // 清空輸入框
+    }
+
+    // 最終解謎邏輯 (呼叫後端 API)
     function unlockDoor() {
         const code = document.getElementById('password-input').value;
         const btn = document.getElementById('submit-btn');
@@ -104,7 +164,6 @@
         btn.style.display = 'none';
         loading.style.display = 'block';
 
-        // 配合你現有的 Router.gs，改用 GET 方法，並把遊戲類型和密碼帶在網址後面
         const requestUrl = `${API_URL}?game=EscapeQuestion&code=${code}`;
 
         fetch(requestUrl)
@@ -113,14 +172,16 @@
             btn.style.display = 'inline-block';
             loading.style.display = 'none';
 
-            // 檢查你的 router 回傳的 status
             if (res.status === 'success') {
-                const gameData = res.data; // 這邊對應到 checkEscapeCode 回傳的物件
+                const gameData = res.data; 
                 storyEl.innerHTML = gameData.message;
                 
                 if(gameData.success) {
+                    // 通關後隱藏所有按鈕與面板
                     document.querySelector('.btn-group').style.display = 'none';
                     doorPanel.style.display = 'none';
+                    storyEl.style.color = '#00ff00';
+                    storyEl.style.fontSize = '18px';
                 }
             } else {
                 alert("後端發生錯誤：" + res.message);
