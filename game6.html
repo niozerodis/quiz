@@ -30,7 +30,6 @@
         }
         h1 { color: #00e5ff; letter-spacing: 2px; margin-top: 0; }
         
-        /* 姓名輸入畫面 */
         #start-screen { display: flex; flex-direction: column; align-items: center; }
         input {
             background-color: #0a1428; color: #fff; border: 1px solid #008899;
@@ -42,28 +41,28 @@
         }
         .btn:hover { background-color: #00e5ff; color: #000; }
 
-        /* 遊戲畫面 */
         #game-screen { display: none; }
         .scoreboard {
-            display: flex; justify-content: space-around; margin-bottom: 20px;
-            background: #111; padding: 15px; border-radius: 8px; border: 1px solid #444;
+            display: flex; justify-content: space-around; margin-bottom: 25px;
+            background: #111; padding: 15px; border-radius: 8px; border: 1px solid #2a2a2a;
         }
-        .score { font-size: 24px; font-weight: bold; color: #ffb067; }
+        .score { font-size: 26px; font-weight: bold; color: #ffb067; margin-top: 5px; }
         .score-title { font-size: 14px; color: #a09b8c; }
         
+        /* 更新的競技場排版：置中大圖 */
         .arena {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
         }
-        .fighter { width: 45%; }
         .fighter-img {
-            width: 120px; height: 120px; border-radius: 50%; border: 3px solid #785a28;
-            object-fit: cover; background-color: #222; margin-bottom: 10px;
+            width: 260px; height: 260px; border-radius: 50%; border: 3px solid #785a28;
+            object-fit: cover; background-color: #222; margin-bottom: 15px;
         }
-        .vs { font-size: 24px; font-weight: bold; color: #c8aa6e; font-style: italic; }
+        .fighter-name { color: #a09b8c; font-size: 16px; margin-bottom: 15px; }
         
-        .round-result { font-size: 18px; font-weight: bold; color: #00e5ff; min-height: 25px; margin-bottom: 20px; }
+        /* 訊息列移到這裡 */
+        .round-result { font-size: 18px; font-weight: bold; color: #00e5ff; min-height: 25px; margin-bottom: 25px; }
 
-        .controls { display: flex; gap: 10px; justify-content: center; }
+        .controls { display: flex; gap: 15px; justify-content: center; }
         .rps-btn {
             background-color: #111; color: #f0e6d2; border: 2px solid #785a28; border-radius: 50%;
             width: 70px; height: 70px; font-size: 24px; cursor: pointer; transition: 0.2s;
@@ -71,7 +70,6 @@
         .rps-btn:hover { background-color: #c8aa6e; color: #000; transform: scale(1.1); }
         .rps-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* 結算畫面 */
         #end-screen { display: none; }
         #final-message { font-size: 28px; font-weight: bold; margin-bottom: 20px; color: #ffb067; }
         .loading { color: #a09b8c; font-size: 14px; margin-top: 15px; }
@@ -82,7 +80,7 @@
 <a href="./index.html" class="back-btn">⬅ 回大廳</a>
 
 <div class="container" id="start-screen">
-    <h1>⚔️ 三戰兩勝！對決阿布</h1>
+    <h1>⚔️ 猜拳對決</h1>
     <p style="color: #a09b8c; margin-bottom: 20px;">請輸入你的漂泊者代號來開始對戰：</p>
     <input type="text" id="player-name" placeholder="輸入姓名或暱稱" maxlength="15">
     <button class="btn" onclick="startGame()">確認參戰</button>
@@ -102,18 +100,10 @@
     </div>
 
     <div class="arena">
-        <div class="fighter">
-            <div id="player-hand" style="font-size: 80px; line-height: 120px;">❓</div>
-            <div style="color: #a09b8c;">你</div>
-        </div>
-        <div class="vs">VS</div>
-        <div class="fighter">
-            <img id="ahbu-hand" class="fighter-img" src="./Abby00.png" alt="阿布">
-            <div style="color: #a09b8c;">阿布</div>
-        </div>
+        <img id="ahbu-hand" class="fighter-img" src="./Abby00.png" alt="阿布">
+        <div class="fighter-name">阿布</div>
+        <div class="round-result" id="round-result">請選擇你要出的拳！</div>
     </div>
-
-    <div class="round-result" id="round-result">請選擇你要出的拳！</div>
 
     <div class="controls" id="controls">
         <button class="rps-btn" onclick="playRound('rock')">✊</button>
@@ -133,7 +123,6 @@
     // ★★★ 將這裡的 URL 替換成你部署的 Router.gs Web App 網址 ★★★
     const API_URL = "https://script.google.com/macros/s/AKfycby1BWBCxXutXojI4jAGU4E42xXu7ExIF35bec-Y9WNCkIRr8XHmrZWEGaFuQgKzr155/exec";
 
-    // ★★★ 將這裡換成阿布真實的圖片網址 ★★★
     const AHBU_IMAGES = {
         idle: "./Abby00.png",
         rock: "./Abby02.png", 
@@ -142,7 +131,6 @@
     };
 
     const EMOJI_MAP = { rock: "✊", paper: "✋", scissors: "✌️" };
-    const CHOICES = ['rock', 'paper', 'scissors'];
 
     let playerName = "";
     let pScore = 0;
@@ -162,18 +150,28 @@
     }
 
     function playRound(playerChoice) {
-        // 禁用按鈕防止連續點擊
         const buttons = document.querySelectorAll('.rps-btn');
         buttons.forEach(b => b.disabled = true);
 
-        // 隨機決定阿布出什麼
-        const ahbuChoice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+        // 提高玩家勝率的作弊邏輯 (60% 玩家贏)
+        let ahbuChoice;
+        const rand = Math.random();
+
+        if (rand < 0.60) {
+            if (playerChoice === 'rock') ahbuChoice = 'scissors';
+            else if (playerChoice === 'paper') ahbuChoice = 'rock';
+            else ahbuChoice = 'paper';
+        } else if (rand < 0.80) {
+            ahbuChoice = playerChoice;
+        } else {
+            if (playerChoice === 'rock') ahbuChoice = 'paper';
+            else if (playerChoice === 'paper') ahbuChoice = 'scissors';
+            else ahbuChoice = 'rock';
+        }
         
-        // 更新畫面圖示
-        document.getElementById('player-hand').innerText = EMOJI_MAP[playerChoice];
+        // 只更新阿布的圖片，不再更新玩家的 Emoji
         document.getElementById('ahbu-hand').src = AHBU_IMAGES[ahbuChoice];
 
-        // 判斷勝負
         let resultMsg = "";
         if (playerChoice === ahbuChoice) {
             resultMsg = "平手！再來一次！";
@@ -189,19 +187,15 @@
             aScore++;
         }
 
-        // 更新分數與文字
         document.getElementById('player-score').innerText = pScore;
         document.getElementById('ahbu-score').innerText = aScore;
         document.getElementById('round-result').innerText = resultMsg;
 
-        // 檢查是否有人達到兩勝
         if (pScore >= 2 || aScore >= 2) {
-            setTimeout(endGame, 1000); // 延遲一秒讓玩家看清楚最後一回合
+            setTimeout(endGame, 1000);
         } else {
-            // 還沒結束，恢復按鈕
             setTimeout(() => {
                 buttons.forEach(b => b.disabled = false);
-                document.getElementById('player-hand').innerText = "❓";
                 document.getElementById('ahbu-hand').src = AHBU_IMAGES.idle;
                 document.getElementById('round-result').innerText = "請選擇你要出的拳！";
             }, 1500);
@@ -217,7 +211,6 @@
         document.getElementById('final-message').style.color = isPlayerWin ? "#00e5ff" : "#ff4d6d";
         document.getElementById('final-score').innerText = `最終比數： ${pScore} - ${aScore}`;
 
-        // 將結果上傳至後端
         uploadResult(isPlayerWin ? 'win' : 'lose');
     }
 
@@ -240,7 +233,6 @@
             document.getElementById('upload-status').style.color = "#ff4d6d";
         })
         .finally(() => {
-            // 無論成功失敗，最後都顯示返回大廳的按鈕
             document.getElementById('back-lobby-btn').style.display = 'inline-block';
         });
     }
