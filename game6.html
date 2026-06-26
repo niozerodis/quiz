@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>與阿布的猜拳對決</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #f0e6d2;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0;
+            background-image: linear-gradient(135deg, #0a1428 0%, #1a2a40 100%);
+            position: relative;
+        }
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; color: #00e5ff;
+            text-decoration: none; font-weight: bold; font-size: 16px;
+            border: 1px solid #00e5ff; padding: 8px 15px; border-radius: 6px;
+            transition: all 0.3s; background-color: rgba(0, 229, 255, 0.1);
+        }
+        .back-btn:hover { background-color: #00e5ff; color: #121212; }
+
+        .container {
+            background-color: #1e2328; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 500px; text-align: center;
+            border: 2px solid #008899; box-shadow: 0 0 30px rgba(0, 136, 153, 0.3);
+        }
+        h1 { color: #00e5ff; letter-spacing: 2px; margin-top: 0; }
+        
+        /* 姓名輸入畫面 */
+        #start-screen { display: flex; flex-direction: column; align-items: center; }
+        input {
+            background-color: #0a1428; color: #fff; border: 1px solid #008899;
+            padding: 12px; font-size: 16px; border-radius: 6px; margin-bottom: 20px; width: 80%; text-align: center;
+        }
+        .btn {
+            background-color: #008899; color: #fff; border: none; border-radius: 6px;
+            padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 80%;
+        }
+        .btn:hover { background-color: #00e5ff; color: #000; }
+
+        /* 遊戲畫面 */
+        #game-screen { display: none; }
+        .scoreboard {
+            display: flex; justify-content: space-around; margin-bottom: 20px;
+            background: #111; padding: 15px; border-radius: 8px; border: 1px solid #444;
+        }
+        .score { font-size: 24px; font-weight: bold; color: #ffb067; }
+        .score-title { font-size: 14px; color: #a09b8c; }
+        
+        .arena {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+        .fighter { width: 45%; }
+        .fighter-img {
+            width: 120px; height: 120px; border-radius: 50%; border: 3px solid #785a28;
+            object-fit: cover; background-color: #222; margin-bottom: 10px;
+        }
+        .vs { font-size: 24px; font-weight: bold; color: #c8aa6e; font-style: italic; }
+        
+        .round-result { font-size: 18px; font-weight: bold; color: #00e5ff; min-height: 25px; margin-bottom: 20px; }
+
+        .controls { display: flex; gap: 10px; justify-content: center; }
+        .rps-btn {
+            background-color: #111; color: #f0e6d2; border: 2px solid #785a28; border-radius: 50%;
+            width: 70px; height: 70px; font-size: 24px; cursor: pointer; transition: 0.2s;
+        }
+        .rps-btn:hover { background-color: #c8aa6e; color: #000; transform: scale(1.1); }
+        .rps-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* 結算畫面 */
+        #end-screen { display: none; }
+        #final-message { font-size: 28px; font-weight: bold; margin-bottom: 20px; color: #ffb067; }
+        .loading { color: #a09b8c; font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<a href="./index.html" class="back-btn">⬅ 回大廳</a>
+
+<div class="container" id="start-screen">
+    <h1>⚔️ 三戰兩勝！對決阿布</h1>
+    <p style="color: #a09b8c; margin-bottom: 20px;">請輸入你的漂泊者代號來開始對戰：</p>
+    <input type="text" id="player-name" placeholder="輸入姓名或暱稱" maxlength="15">
+    <button class="btn" onclick="startGame()">確認參戰</button>
+</div>
+
+<div class="container" id="game-screen">
+    <h1>⚔️ 猜拳對決</h1>
+    <div class="scoreboard">
+        <div>
+            <div class="score-title" id="display-name">玩家</div>
+            <div class="score" id="player-score">0</div>
+        </div>
+        <div>
+            <div class="score-title">阿布</div>
+            <div class="score" id="ahbu-score">0</div>
+        </div>
+    </div>
+
+    <div class="arena">
+        <div class="fighter">
+            <div id="player-hand" style="font-size: 80px; line-height: 120px;">❓</div>
+            <div style="color: #a09b8c;">你</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="fighter">
+            <img id="ahbu-hand" class="fighter-img" src="https://fakeimg.pl/200x200/282828/f0e6d2/?text=準備" alt="阿布">
+            <div style="color: #a09b8c;">阿布</div>
+        </div>
+    </div>
+
+    <div class="round-result" id="round-result">請選擇你要出的拳！</div>
+
+    <div class="controls" id="controls">
+        <button class="rps-btn" onclick="playRound('rock')">✊</button>
+        <button class="rps-btn" onclick="playRound('paper')">✋</button>
+        <button class="rps-btn" onclick="playRound('scissors')">✌️</button>
+    </div>
+</div>
+
+<div class="container" id="end-screen">
+    <h1 id="final-message">遊戲結束</h1>
+    <p id="final-score" style="font-size: 18px; margin-bottom: 20px;"></p>
+    <div id="upload-status" class="loading">📡 正在將戰果同步至終端資料庫...</div>
+    <button class="btn" style="display:none; margin-top: 20px;" id="back-lobby-btn" onclick="location.href='./index.html'">返回大廳</button>
+</div>
+
+<script>
+    // ★★★ 將這裡的 URL 替換成你部署的 Router.gs Web App 網址 ★★★
+    const API_URL = "你的_APPS_SCRIPT_WEB_APP_URL_填在這裡";
+
+    // ★★★ 將這裡換成阿布真實的圖片網址 ★★★
+    const AHBU_IMAGES = {
+        idle: "https://imgpoi.com/image/1NNFNDhttps://imgpoi.com/image/1NNFND",
+        rock: "https://imgpoi.com/image/abby02.3QJVYB", 
+        paper: "https://imgpoi.com/image/abby01.3QJDKG",
+        scissors: "https://imgpoi.com/image/abby03.3QJ0O9"
+    };
+
+    const EMOJI_MAP = { rock: "✊", paper: "✋", scissors: "✌️" };
+    const CHOICES = ['rock', 'paper', 'scissors'];
+
+    let playerName = "";
+    let pScore = 0;
+    let aScore = 0;
+
+    function startGame() {
+        const nameInput = document.getElementById('player-name').value.trim();
+        if (!nameInput) {
+            alert("請輸入代號！");
+            return;
+        }
+        playerName = nameInput;
+        document.getElementById('display-name').innerText = playerName;
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+    }
+
+    function playRound(playerChoice) {
+        // 禁用按鈕防止連續點擊
+        const buttons = document.querySelectorAll('.rps-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        // 隨機決定阿布出什麼
+        const ahbuChoice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+        
+        // 更新畫面圖示
+        document.getElementById('player-hand').innerText = EMOJI_MAP[playerChoice];
+        document.getElementById('ahbu-hand').src = AHBU_IMAGES[ahbuChoice];
+
+        // 判斷勝負
+        let resultMsg = "";
+        if (playerChoice === ahbuChoice) {
+            resultMsg = "平手！再來一次！";
+        } else if (
+            (playerChoice === 'rock' && ahbuChoice === 'scissors') ||
+            (playerChoice === 'paper' && ahbuChoice === 'rock') ||
+            (playerChoice === 'scissors' && ahbuChoice === 'paper')
+        ) {
+            resultMsg = "你贏了這回合！";
+            pScore++;
+        } else {
+            resultMsg = "阿布贏了這回合！";
+            aScore++;
+        }
+
+        // 更新分數與文字
+        document.getElementById('player-score').innerText = pScore;
+        document.getElementById('ahbu-score').innerText = aScore;
+        document.getElementById('round-result').innerText = resultMsg;
+
+        // 檢查是否有人達到兩勝
+        if (pScore >= 2 || aScore >= 2) {
+            setTimeout(endGame, 1000); // 延遲一秒讓玩家看清楚最後一回合
+        } else {
+            // 還沒結束，恢復按鈕
+            setTimeout(() => {
+                buttons.forEach(b => b.disabled = false);
+                document.getElementById('player-hand').innerText = "❓";
+                document.getElementById('ahbu-hand').src = AHBU_IMAGES.idle;
+                document.getElementById('round-result').innerText = "請選擇你要出的拳！";
+            }, 1500);
+        }
+    }
+
+    function endGame() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'block';
+
+        const isPlayerWin = pScore >= 2;
+        document.getElementById('final-message').innerText = isPlayerWin ? "🎉 恭喜你，戰勝了阿布！" : "💀 挑戰失敗，阿布獲勝！";
+        document.getElementById('final-message').style.color = isPlayerWin ? "#00e5ff" : "#ff4d6d";
+        document.getElementById('final-score').innerText = `最終比數： ${pScore} - ${aScore}`;
+
+        // 將結果上傳至後端
+        uploadResult(isPlayerWin ? 'win' : 'lose');
+    }
+
+    function uploadResult(finalResult) {
+        const requestUrl = `${API_URL}?game=WWRock&playerName=${encodeURIComponent(playerName)}&result=${finalResult}&playerScore=${pScore}&ahbuScore=${aScore}`;
+
+        fetch(requestUrl)
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success') {
+                document.getElementById('upload-status').innerText = "✅ 戰果同步完成！";
+                document.getElementById('upload-status').style.color = "#00ff00";
+            } else {
+                document.getElementById('upload-status').innerText = "❌ 資料庫同步失敗：" + res.message;
+                document.getElementById('upload-status').style.color = "#ff4d6d";
+            }
+        })
+        .catch(error => {
+            document.getElementById('upload-status').innerText = "❌ 伺服器連線異常，無法記錄成績。";
+            document.getElementById('upload-status').style.color = "#ff4d6d";
+        })
+        .finally(() => {
+            // 無論成功失敗，最後都顯示返回大廳的按鈕
+            document.getElementById('back-lobby-btn').style.display = 'inline-block';
+        });
+    }
+</script>
+
+</body>
+</html>
